@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hello
+spec:
+  template:
+    spec:
+      containers:
+        - name: hellow
+          image: busybox
+          args:
+            - /bin/sh
+            - -c
+            - date; echo Hello World
+      restartPolicy: OnFailure
+
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: hello
+spec:
+  schedule: "*/1 * * * *"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  startingDeadlineSeconds: 60
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: hellow
+              image: busybox
+              args:
+                - /bin/sh
+                - -c
+                - data; echo "Hello World"
+          restartPolicy: OnFailure

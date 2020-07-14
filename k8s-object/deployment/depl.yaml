@@ -1,0 +1,32 @@
+# for old k8s cluster: 
+# apiVersion: extensions/v1beta1
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment-1
+  # namespace: default
+  labels:
+    app: nginx
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: nginx
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 3
+      maxUnavailable: 2
+  minReadySeconds: 5
+  template:
+    metadata:
+      name: nginx-pod-1
+      # namespace: default
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx:latest
+        imagePullPolicy: Always
+        name: nginx
+      terminationGracePeriodSeconds: 30

@@ -1,0 +1,29 @@
+# for old k8s cluster: 
+# apiVersion: extensions/v1beta1
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nginx-daemonset-1
+  # namespace: default
+  labels:
+    app: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  minReadySeconds: 5
+  template:
+    metadata:
+      name: nginx-pod-1
+      # namespace: default
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx:latest
+        imagePullPolicy: Always
+        name: nginx

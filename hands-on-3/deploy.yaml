@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment-1
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      name: nginx-pod-1
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - image: nginx:latest
+          imagePullPolicy: Always
+          name: nginx

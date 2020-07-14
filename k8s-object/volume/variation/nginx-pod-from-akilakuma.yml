@@ -1,0 +1,21 @@
+# https://github.com/Akilakuma/k8s_learning_homwork/blob/master/hw1/nginx-pod-2.yml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod-2
+  labels:
+    app: nginx
+    cache: memcache
+spec:
+  containers:
+  - name: nginx-server
+    image: nginx
+    command: ["/bin/bash", "-c", "echo 'password is '$(configmap_password) >> /usr/share/nginx/html/index.html && nginx -g 'daemon off;' "]
+    env:
+    - name: configmap_password
+      valueFrom:
+        configMapKeyRef:
+          name: password-config
+          key: password
+  restartPolicy: Never

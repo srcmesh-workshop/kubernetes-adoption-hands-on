@@ -1,0 +1,26 @@
+# https://github.com/mk201309/k8s-work/blob/master/service/confinmap-pod-3.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod3-nginx-config
+data:
+  default.conf: |
+    upstream favtomcat {
+       server web-svc:5566;
+    }
+    server {
+        listen       80;
+        server_name  localhost;
+
+        location / {                              
+            root   /usr/share/nginx/html;         
+            index  index.html index.htm;          
+            proxy_pass http://favtomcat;          
+        }                                         
+
+        error_page   500 502 503 504  /50x.html;        
+        location = /50x.html {                          
+            root   /usr/share/nginx/html;               
+        }                                               
+    }

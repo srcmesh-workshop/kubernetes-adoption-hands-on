@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nginx-daemonset-1
+  labels:
+    app: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      name: nginx-pod-1
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - image: nginx:latest
+          imagePullPolicy: Always
+          name: nginx
+      terminationGracePeriodSeconds: 10 # small value just for demonstration
+      
