@@ -21,10 +21,14 @@ $ kubectl create namespace <ns>
 
 ```bash
 # 指令
+$ kubectl config set-context <context-name>
+$ kubectl config use-context <context-name>
 $ kubectl config set-context --current --namespace=<ns>
 
 # 範例
-$ kubectl config set-context --current --namespace=test-ns
+$ kubectl config set-context default
+$ kubectl config use-context default
+$ kubectl config set-context --current --namespace=user-0
 ```
 
 ## 確認是否已經切換成功
