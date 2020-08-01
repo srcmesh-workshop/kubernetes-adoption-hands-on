@@ -102,7 +102,7 @@ $ kubectl logs -f <pod> -c <container>
 
 ```bash
 # 指令
-$ kubectl label <resource> <ns> <key>=<value>
+$ kubectl label <resource> <name> <key>=<value>
 ```
 
 用 editor 給 pod 上標籤
@@ -122,7 +122,7 @@ $ kubectl get <resource> --show-labels
 * 最後有個 `-` 代表移除
 
 ```bash
-$ kubectl label <resource> <ns> <key>-
+$ kubectl label <resource> <name> <key>-
 ```
 
 ## Delete pod
