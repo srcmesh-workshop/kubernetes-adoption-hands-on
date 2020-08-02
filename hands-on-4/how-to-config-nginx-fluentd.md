@@ -48,3 +48,16 @@ spec:
       - key: nginx.conf
         path: nginx.conf
 ```
+
+# 如何設定 Fluentd 去讀 NGINX access.log
+
+* fluentd.conf: `/fluentd/etc/fluent.conf`
+
+```
+<source>
+  type tail
+  path /var/log/nginx/*.log
+  tag nginx.access
+  format nginx
+</source>
+```
