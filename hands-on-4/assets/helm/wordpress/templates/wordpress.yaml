@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: workpress-svc
+spec:
+  selector:
+    app: wordpress
+  ports:
+    - port: 80
+      targetPort: 80
+
+---
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: wordpress-hpa
+spec:
+  minReplicas: {{ .Values.wordpress.hpa.replicas.min }}
+  maxReplicas: {{ .Values.wordpress.hpa.replicas.max }}
+  scaleTargetRef:
+    kind: Deployment
+    name: wordpress
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 30
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+spec:
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+        - name: wordpress
+          image: {{ .Values.wordpress.image }}
+          imagePullPolicy: {{ .Values.wordpress.pullPolicy }}
+          env:
+            - name: CHART_VERSION
+              value: {{ .Chart.Version }}
+            # This is only for demonstration for
+            # how an application connect to a
+            # database service. If you're trying
+            # to work with db cluster, please use
+            # headless service DNS (FQDN) instead.
+            - name: WORDPRESS_DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-cfgmap
+                  key: db_host
+            - name: WORDPRESS_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: user
+            - name: WORDPRESS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: root_passwd
+            - name: WORDPRESS_DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-cfgmap
+                  key: db_name
+          ports:
+            - containerPort: 80

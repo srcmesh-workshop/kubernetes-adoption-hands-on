@@ -1,0 +1,118 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-conf
+data:
+# If you're trying to create a configmap from a
+# file, please be careful about the indent.
+{{- if .Files.Get "config/nginx-default.conf" }}
+  nginx-proxy-conf: |
+{{ .Files.Get "config/nginx-default.conf" | indent 4 }}
+{{ else }}
+{{ fail "invalid chart" }}
+{{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-svc
+spec:
+  selector:
+    app: nginx
+  ports:
+    - port: 8888
+      targetPort: 80
+  # Assume you're playing with the chart against to docker-desktop.
+  # If you're on the platform that doesn't support LoadBalancer type
+  # service, you can use port-forward instead.
+  type: LoadBalancer
+
+---
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nginx-hpa
+spec:
+  minReplicas: {{ .Values.nginx.hpa.replicas.min }}
+  maxReplicas: {{ .Values.nginx.hpa.replicas.max }}
+  scaleTargetRef:
+    kind: Deployment
+    name: nginx
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      initContainers:
+        - name: log-symlink-creator
+          image: alpine:3.5
+          command:
+            - /bin/sh
+            - -xc
+            - >
+              LOGDIR=/logs/${POD_NAMESPACE}/${POD_NAME};
+              mkdir -p ${LOGDIR}
+              && ln -sfv ${LOGDIR} /var/log/nginx/pod-log-dir
+              && chmod -R ugo+wr ${LOGDIR}
+          env:
+            - name: CHART_VERSION
+              value: {{ .Chart.Version }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          volumeMounts:
+            - mountPath: /var/log/nginx
+              name: temp-log-volume
+            - mountPath: /logs
+              name: host-log-volume
+      containers:
+        - name: nginx
+          image: {{ .Values.nginx.image }}
+          imagePullPolicy: {{ .Values.nginx.pullPolicy }}
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: /etc/nginx
+              name: nginx
+            - mountPath: /var/log/nginx
+              name: temp-log-volume
+            - mountPath: /logs
+              name: host-log-volume
+      volumes:
+        - name: nginx
+          configMap:
+            name: nginx-conf
+            defaultMode: 420
+            items:
+              - key: nginx-proxy-conf
+                path: nginx.conf
+        - name: temp-log-volume
+          emptyDir: {}
+        - name: host-log-volume
+          hostPath:
+            # the path on host machine
+            path: /var/log/wordpress-nginx/
