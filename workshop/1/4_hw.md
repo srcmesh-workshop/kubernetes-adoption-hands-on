@@ -1,3 +1,20 @@
+# Homework
+
+請利用 `nginx`、`wordpress`、`fluentd`、`MySQL` 建立一個在 Kubernetes 上運作的部落格系統
+
+Nginx Image: https://hub.docker.com/_/nginx
+MySQL Image: https://hub.docker.com/_/mysql
+Fluentd Image: https://hub.docker.com/_/fluentd
+MySQL Image: https://hub.docker.com/_/mysql
+
+* nginx
+  * config path: `/etc/nginx/nginx.conf`
+
+* fluentd:
+  * config path: `/fluentd/etc/fluent.conf`
+
+* nginx.conf
+```
 user  nginx;
 worker_processes  1;
 
@@ -13,9 +30,7 @@ http {
                       '$status $body_bytes_sent "$http_referer" '
                       '"$http_user_agent" "$http_x_forwarded_for"';
 
-    # /var/log/nginx/pod-log-dir is a symlink to the
-    # pod specific log in hostPath volume. For detail,
-    # see nginx.yaml > deploy > spec > template > container > command
+    # Path to access.log & error.log
     access_log /var/log/nginx/pod-log-dir/access.log  main;
     error_log /var/log/nginx/pod-log-dir/error.log  warn;
 
@@ -25,7 +40,7 @@ http {
 
     upstream backend {
         # must match the target service name
-        server workpress-svc:80;
+        server <backend-wordpress-svc-name>:80;
     }
 
     server {
@@ -35,7 +50,8 @@ http {
             # and it equals to `HTTP_HOST` request header.
             proxy_set_header Host $http_host;
 
-            proxy_pass http://backend;
+            # You have to change this according to your setup.
+            proxy_pass http://<backend-wordpress-svc-name>;
 
             # Modify `Location` of 301 or 302 HTTP response, so
             # that the browser will follow the correct location.
@@ -43,3 +59,29 @@ http {
         }
     }
 }
+```
+
+* fluend.conf
+```
+<source>
+  type tail
+  path /logs/**/access.log
+  tag nginx.access
+  format nginx
+</source>
+
+<source>
+  @type tail
+  format /^(?<time>\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}) \[(?<log_level>\w+)\] (?<pid>\d+).(?<tid>\d+): (?<message>.*)$/
+  tag nginx.error
+  path /logs/**/error.log
+</source>
+
+<match nginx.access>
+  @type stdout
+</match>
+
+<match nginx.error>
+  @type stdout
+</match>
+```

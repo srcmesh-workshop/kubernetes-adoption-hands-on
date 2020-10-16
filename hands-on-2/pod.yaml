@@ -15,7 +15,7 @@ spec:
     - name: busybox
       image: busybox:latest
       # container 內需要有個 process 持續執行才能存活
-      # 因為是作為 demo share volume 之用
+      # 因為是作為 demo shared volume 之用
       command:
         - watch
         - echo 'Version 1' > /tmp/index.html
