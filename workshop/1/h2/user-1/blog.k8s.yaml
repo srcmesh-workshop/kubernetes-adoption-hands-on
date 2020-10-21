@@ -1,0 +1,267 @@
+apiVersion: "v1"
+data:
+  default.conf: "server {
+
+    \    listen       80;
+
+    \    location / {
+
+    \        # $http_host is the host name that users seen on the browser
+    URL
+
+    \        # and it equals to `HTTP_HOST` request header.
+
+    \        proxy_set_header Host $http_host;
+
+
+    \        # You have to change this according to your setup.
+
+    \        proxy_pass http://wordpress-service;
+
+
+    \        # Modify `Location` of 301 or 302 HTTP response, so
+
+    \        # that the browser will follow the correct location.
+
+    \        proxy_redirect ~^http://[^/]*/(.*) http://$http_host/$1;
+
+    \    }
+
+    }"
+kind: "ConfigMap"
+metadata:
+  name: "nginx-conf"
+---
+apiVersion: "v1"
+data:
+  fluent.conf: "<source>
+
+    \  type tail
+
+    \  path /logs/**/access.log
+
+    \  tag nginx.access
+
+    \  format nginx
+
+    </source>
+
+
+    <source>
+
+    \  @type tail
+
+    \  format /^(?<time>\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2})
+    \\[(?<log_level>\\w+)\\] (?<pid>\\d+).(?<tid>\\d+): (?<message>.*)$/
+
+    \  tag nginx.error
+
+    \  path /logs/**/error.log
+
+    </source>
+
+
+    <match nginx.access>
+
+    \  @type stdout
+
+    </match>
+
+
+    <match nginx.error>
+
+    \  @type stdout
+
+    </match>"
+kind: "ConfigMap"
+metadata:
+  name: "fluentd-conf"
+---
+apiVersion: "v1"
+kind: "Secret"
+metadata:
+  name: "db-secret"
+stringData:
+  MYSQL_DATABASE: "wordpress"
+  MYSQL_PASSWORD: "sserpdrow"
+  MYSQL_ROOT_PASSWORD: "wqpejmo3n cpmo248"
+  MYSQL_USER: "wordpress"
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  name: "mysql-service"
+spec:
+  externalIPs: []
+  ports:
+    - port: 3306
+  selector:
+    cdk8s.deployment: "blog-Database-f5b51dd5"
+  type: "ClusterIP"
+---
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  name: "mysql-deployment"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      cdk8s.deployment: "blog-Database-f5b51dd5"
+  template:
+    metadata:
+      labels:
+        cdk8s.deployment: "blog-Database-f5b51dd5"
+    spec:
+      containers:
+        - env:
+            - name: "MYSQL_DATABASE"
+              valueFrom:
+                secretKeyRef:
+                  key: "MYSQL_DATABASE"
+                  name: "db-secret"
+            - name: "MYSQL_USER"
+              valueFrom:
+                secretKeyRef:
+                  key: "MYSQL_USER"
+                  name: "db-secret"
+            - name: "MYSQL_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  key: "MYSQL_PASSWORD"
+                  name: "db-secret"
+            - name: "MYSQL_ROOT_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  key: "MYSQL_ROOT_PASSWORD"
+                  name: "db-secret"
+          image: "mysql:5.7.31"
+          imagePullPolicy: "Always"
+          name: "main"
+          ports: []
+          volumeMounts: []
+      volumes: []
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  name: "wordpress-service"
+spec:
+  externalIPs: []
+  ports:
+    - port: 80
+  selector:
+    cdk8s.deployment: "blog-Wordpress-a81832a4"
+  type: "ClusterIP"
+---
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  name: "wordpress-deployment"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      cdk8s.deployment: "blog-Wordpress-a81832a4"
+  template:
+    metadata:
+      labels:
+        cdk8s.deployment: "blog-Wordpress-a81832a4"
+    spec:
+      containers:
+        - env:
+            - name: "WORDPRESS_DB_HOST"
+              value: "mysql-service"
+            - name: "WORDPRESS_DB_USER"
+              valueFrom:
+                secretKeyRef:
+                  key: "MYSQL_USER"
+                  name: "db-secret"
+            - name: "WORDPRESS_DB_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  key: "MYSQL_PASSWORD"
+                  name: "db-secret"
+            - name: "WORDPRESS_DB_NAME"
+              valueFrom:
+                secretKeyRef:
+                  key: "MYSQL_DATABASE"
+                  name: "db-secret"
+          image: "wordpress:php7.2"
+          imagePullPolicy: "Always"
+          name: "main"
+          ports: []
+          volumeMounts: []
+      volumes: []
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  name: "nginx-service"
+spec:
+  externalIPs: []
+  ports:
+    - port: 80
+  selector:
+    cdk8s.deployment: "blog-Nginx-f6ab34c6"
+  type: "LoadBalancer"
+---
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  name: "nginx"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      cdk8s.deployment: "blog-Nginx-f6ab34c6"
+  template:
+    metadata:
+      labels:
+        cdk8s.deployment: "blog-Nginx-f6ab34c6"
+    spec:
+      containers:
+        - env: []
+          image: "nginx:stable"
+          imagePullPolicy: "Always"
+          name: "main"
+          ports: []
+          volumeMounts:
+            - mountPath: "/etc/nginx/conf.d"
+              name: "nginx-conf"
+              readOnly: true
+            - mountPath: "/var/log/nginx/pod-log-dir"
+              name: "log"
+        - env: []
+          image: "fluent/fluentd:v1.9-1"
+          imagePullPolicy: "Always"
+          name: "logger"
+          ports: []
+          volumeMounts:
+            - mountPath: "/fluentd/etc"
+              name: "fluentd-conf"
+              readOnly: true
+      volumes:
+        - configMap:
+            items:
+              - key: "default.conf"
+                path: "default.conf"
+            name: "nginx-conf"
+          name: "nginx-conf"
+        - emptyDir: {}
+          name: "log"
+        - configMap:
+            items:
+              - key: "fluent.conf"
+                path: "fluent.conf"
+            name: "fluentd-conf"
+          name: "fluentd-conf"
+---
+apiVersion: "networking.k8s.io/v1beta1"
+kind: "Ingress"
+metadata:
+  name: "ingress"
+spec:
+  backend:
+    serviceName: "nginx-service"
+    servicePort: 80
