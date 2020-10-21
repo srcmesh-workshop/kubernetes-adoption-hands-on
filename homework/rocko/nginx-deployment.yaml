@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-fluent
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      name: nginx-pod-1
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: log-volume
+              mountPath: "/var/log/nginx"
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+            - mountPath: "/var/www/html"
+              name: wp-pd
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          livenessProbe:
+            httpGet:
+              port: 80
+              path: /
+            initialDelaySeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 10
+        - name: fluent
+          image: fluentd:v1.9-1
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: log-volume
+              mountPath: "/logs"
+            - name: fluent-config
+              mountPath: /fluentd/etc/fluent.conf
+              subPath: fluent.conf
+      volumes:
+        - name: log-volume
+          emptyDir: {}
+        - name: nginx-config
+          configMap:
+            name: nginx-default-conf
+        - name: fluent-config
+          configMap:
+            name: fluent-default-conf
+        - name: wp-pd
+          persistentVolumeClaim:
+            claimName: wordpress-hw-pv-claim
