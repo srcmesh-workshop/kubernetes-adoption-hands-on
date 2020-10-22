@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+      - name: wordpress
+        image: wordpress:latest
+        env:
+        - name: db_user
+          valueFrom:
+            secretKeyRef:
+              name: mysqlAuth
+              key: user
+        - name: db_password
+          valueFrom:
+            secretKeyRef:
+              name: mysqlAuth
+              key: user_passwd

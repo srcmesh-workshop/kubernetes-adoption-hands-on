@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  name: mysql-pod
+  labels:
+    version: "1"
+    app: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:latest
+        env:
+        - name: db_admin_user
+          valueFrom:
+            secretKeyRef:
+              name: mysqlAuth
+              key: root_user
+        - name: db_admin_password
+          valueFrom:
+            secretKeyRef:
+              name: mysqlAuth
+              key: root_passwd
+     
