@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-svc
+spec:
+  selector:
+    app: nginx
+  ports:
+  - port: 8888
+    targetPort: 80
+  type: LoadBalancer # choose the right type base on your kubernetes environment
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-svc
+spec:
+  selector:
+    app: wordpress
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-svc
+spec:
+  selector:
+    app: mysql
+  ports:
+  - port: 3306
+    targetPort: 3306
+  type: ClusterIP
