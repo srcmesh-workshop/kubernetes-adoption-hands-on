@@ -31,8 +31,8 @@ http {
                       '"$http_user_agent" "$http_x_forwarded_for"';
 
     # Path to access.log & error.log
-    access_log /var/log/nginx/pod-log-dir/access.log  main;
-    error_log /var/log/nginx/pod-log-dir/error.log  warn;
+    access_log /var/log/nginx/access.log  main;
+    error_log /var/log/nginx/error.log  warn;
 
     sendfile        on;
     keepalive_timeout  65;
