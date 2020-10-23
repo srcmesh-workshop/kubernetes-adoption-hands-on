@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: public-nginx-fluentd
+spec:
+  selector:
+    version: "1"
+    app: nginx-fluentd
+  ports:
+    - port: 80
+      nodePort: 30001
+      targetPort: 80
+  type: NodePort

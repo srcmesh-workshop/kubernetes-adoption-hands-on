@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql
+  labels:
+    version: "1"
+    app: mysql
+spec:
+  containers:
+  - name: mysql
+    image: mysql:5.6
+    imagePullPolicy: IfNotPresent
+    env:
+    - name: MYSQL_ROOT_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          key: MYSQL_ROOT_PASSWORD
+          name: mssql-secret
+    - name: MYSQL_USER
+      valueFrom:
+        secretKeyRef:
+          key: MYSQL_USER
+          name: mssql-secret
+    - name: MYSQL_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          key: MYSQL_PASSWORD
+          name: mssql-secret
+    - name: MYSQL_DATABASE
+      valueFrom:
+        secretKeyRef:
+          key: MYSQL_DATABASE
+          name: mssql-secret
+    ports:
+    - containerPort: 3306
+      name: mysql
+      protocol: TCP
