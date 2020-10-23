@@ -16,7 +16,20 @@ spec:
           name: wordpress
           env:
             - name: WORDPRESS_DB_HOST
-              value: "mysql"
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-configmap
+                  key: MYSQL_HOST
+            - name: WORDPRESS_DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-configmap
+                  key: MYSQL_DATABASE
+            - name: WORDPRESS_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_USER
             - name: WORDPRESS_DB_PASSWORD
               valueFrom:
                 secretKeyRef:

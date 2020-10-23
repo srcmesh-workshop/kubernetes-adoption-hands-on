@@ -4,3 +4,4 @@ metadata:
   name: mysql-configmap
 data:
   MYSQL_DATABASE: "mysql"
+  MYSQL_HOST: mysql-svc-clusterip

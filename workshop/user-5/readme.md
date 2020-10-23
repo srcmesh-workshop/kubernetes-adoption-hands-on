@@ -12,7 +12,7 @@ password
 kubectl apply -f wordpress.yaml
 kubectl expose deploy wordpress --port=80 --name=wordpress-svc-clusterip --type=ClusterIP --selector="app=wordpress"
 
-kubectl expose pod mysql --port=3306 --name=mysql-svc-clusterip --type=ClusterIP --selector="app=mysql"
+kubectl expose pod mysql --port=3306 --target-port=3306 --name=mysql-svc-clusterip --type=ClusterIP --selector="app=mysql"
 kubectl apply -f nginx.yaml
 kubectl expose deploy nginx --port=8877 --target-port=80 --name=nginx-svc-loadbalancer --type=LoadBalancer --selector="app=nginx"
 
