@@ -11,7 +11,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/home/ubuntu/code/kubernetes-workshop/kubernetes-adoption-hands-on/homework/rocko/databases"
+    path: "databases"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
