@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        volumeMounts:
+        - name: log-volume
+          mountPath: "/var/log/nginx"
+        - name: nginx-config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+      - name: fluent
+        image: fluentd:v1.9-1
+        volumeMounts:
+        - name: log-volume
+          mountPath: "/logs"
+        - name: fluent-config
+          mountPath: /fluentd/etc/fluent.conf
+          subPath: fluent.conf
+      volumes:
+      - name: log-volume
+        emptyDir: {}
+      - name: nginx-config
+        configMap:
+          name: nginx-conf
+      - name: fluent-config
+        configMap:
+          name: fluent-conf

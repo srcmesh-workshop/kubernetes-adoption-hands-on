@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: mysql
+  name: mysql
+spec:
+  containers:
+  - name: mysql
+    image: mysql:latest
+    env:
+    - name: MYSQL_ROOT_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: mysql-secret
+          key: MYSQL_ROOT_PASSWORD
+    - name: MYSQL_USER
+      valueFrom:
+        secretKeyRef:
+          name: mysql-secret
+          key: MYSQL_USER
+    - name: MYSQL_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: mysql-secret
+          key: MYSQL_PASSWORD
+    - name: MYSQL_DATABASE
+      valueFrom:
+        configMapKeyRef:
+          name: mysql-configmap
+          key: MYSQL_DATABASE
+    volumeMounts:
+      - name: mysql-configmap
+        mountPath: "/config"
+        readOnly: true
+    ports:
+    - containerPort: 3306
+      name: mysql
+      protocol: TCP
+  volumes:
+    - name: mysql-configmap
+      configMap:
+        name: mysql-configmap
+        defaultMode: 0400
