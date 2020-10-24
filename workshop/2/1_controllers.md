@@ -29,6 +29,7 @@
 
 利用 StatefulSet 方式部署 MySQL
 * 可以嘗試用 Secret 來管理 MySQL 帳密
+* mysql 存放資料庫的位置是 /var/lib/mysql (所以要將 PV 掛載至該位置)
 * replicas: 1
 
 # CronJob
