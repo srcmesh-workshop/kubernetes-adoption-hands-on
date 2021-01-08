@@ -47,7 +47,7 @@ kubectl apply -f svc.yaml
 
 1. 為 Pod YAML 加上 Resource Requests & Limits (因共用叢集，以下數值僅為讓各位練習使用，不等於生產環境之適合數值)
     * CPU requests (50m) & limits (100m)
-    * Memory requests (50m) & limits (100m)
+    * Memory requests (50Mi) & limits (100Mi)
 2. 為 Pod YAML 加上環境變數 `DUMMY_DATABASE_PASSWORD=admin`
 3. 為 Pod YAML 加上一個 `busybox` container，並且
     * 利用 emptyDir 方式建立一個 shared volume 掛載進 busybox 與 nginx 容器內 (投影片 p53)
@@ -57,7 +57,7 @@ kubectl apply -f svc.yaml
         * Liveness、Startup 使用 `httpGet` 檢測 `/` 是否為 200
         * Readiness 使用 `tcpSocket` 檢測 `port 80`
     * 可參考 https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-5. 開 Github PR 繳交作業
+5. 開 Github PR 繳交 YAML 檔案即可
 
 # 求助
 
