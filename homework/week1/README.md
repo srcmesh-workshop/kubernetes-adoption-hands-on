@@ -57,9 +57,10 @@ kubectl apply -f svc.yaml
         * Liveness、Startup 使用 `httpGet` 檢測 `/` 是否為 200
         * Readiness 使用 `tcpSocket` 檢測 `port 80`
     * 可參考 https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-    
+5. 開 Github PR 繳交作業
+
 # 求助
 
 若有任何疑問可以直接 
-1. github issue
+1. 開 Github issue
 2. email: course@srcmesh.com
