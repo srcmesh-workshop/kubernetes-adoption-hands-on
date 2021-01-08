@@ -41,6 +41,12 @@ kubectl apply -f pod.yaml
 kubectl apply -f svc.yaml
 ```
 
+# 作業操作環境
+
+操作環境之 URL 附在信件內，請按照信件內的資訊連線
+
+**所有檔案請務必放在 `/home/coder/workspace` 底下，避免因機器重啟而遺失資料**
+
 # 作業要求
 
 利用前面指令得到 Pod、Service YAML 後，請按照投影片內容
