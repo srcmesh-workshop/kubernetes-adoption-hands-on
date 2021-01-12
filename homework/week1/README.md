@@ -57,7 +57,9 @@ kubectl apply -f svc.yaml
 2. 為 Pod YAML 加上環境變數 `DUMMY_DATABASE_PASSWORD=admin`
 3. 為 Pod YAML 加上一個 `busybox` container，並且
     * 利用 emptyDir 方式建立一個 shared volume 掛載進 busybox 與 nginx 容器內 (投影片 p53)
-    * 利用 command 讓他持續 echo 環境變數的值到 (投影片 p70)
+      * nginx mount path: `/usr/share/nginx/html/`
+      * busybox mount path: `/html`
+    * 利用 command 讓 busybox 持續 echo 剛剛新增的環境變數的值到 `/html/index.html` (投影片 p70)
 4. 為 Pod YAML 加上三種探針 (投影片 p76~p86)
     * 檢測方式
         * Liveness、Startup 使用 `httpGet` 檢測 `/` 是否為 200
