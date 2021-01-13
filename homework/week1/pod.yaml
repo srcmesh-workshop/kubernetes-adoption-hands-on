@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2021-01-12T12:30:47Z"
+  labels:
+    key: value
+    run: nginx
+  name: nginx
+  namespace: user-7
+  resourceVersion: "1969539"
+  selfLink: /api/v1/namespaces/user-7/pods/nginx
+  uid: 57476aa8-baff-4a82-9dc2-f89ec17cf495
+spec:
+  containers:
+  - image: nginx
+    imagePullPolicy: Always
+    name: nginx
+    resources: 
+      requests:
+        memory: "50Mi"
+        cpu: "50m"
+      limits:
+        memory: "100Mi"
+        cpu: "100m"
+    volumeMounts:
+    - mountPath: /usr/share/nginx/html
+      name: htmldir
+      readOnly: true
+    ports:
+    - name: liveness-port
+      containerPort: 80
+      hostPort: 80
+    startupProbe:
+      httpGet:
+        path: /
+        port: liveness-port
+      failureThreshold: 3
+      periodSeconds: 10
+    livenessProbe:
+      httpGet:
+        path: /
+        port: liveness-port
+      failureThreshold: 3
+      periodSeconds: 10
+    readinessProbe:
+      tcpSocket:
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 10
+  - image: busybox
+    name: busybox
+    env:
+    - name: DUMMY_DATABASE_PASSWORD
+      value: admin
+    resources: 
+      requests:
+        memory: "50Mi"
+        cpu: "50m"
+      limits:
+        memory: "100Mi"
+        cpu: "100m"
+    command: [ "/bin/sh", "-c", "--" ]
+    args: [ "while true; do echo $DUMMY_DATABASE_PASSWORD >> /html/index.html && sleep 5; done;" ]
+    volumeMounts:
+    - mountPath: /html
+      name: htmldir
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: gke-esun-lecture-1-pool-4-4303c2db-qhh9
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  volumes:
+  - name: htmldir
+    emptyDir: {}
