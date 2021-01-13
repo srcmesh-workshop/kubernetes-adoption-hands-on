@@ -8,38 +8,65 @@ metadata:
   namespace: user-27
 spec:
   containers:
+  - image: busybox
+    imagePullPolicy: Always
+    name: busybox
+    resources:
+      limits:
+        cpu: "100m"
+        memory: 100Mi
+      requests:
+        cpu: "50m"
+        memory: 50Mi
+    command: [ "/bin/sh", "-c", "--" ]
+    args: [ "while true; do echo 'hello world' >> /html/index.html && sleep 5; done;" ]
+    volumeMounts:
+    - mountPath: /html/
+      name: emptydir
   - image: nginx:latest
     imagePullPolicy: Always
     name: nginx
     terminationMessagePath: /dev/termination-log
     terminationMessagePolicy: File
     env:
-    - name: APP_NAME
-      value: "nginx"
-    - name: APP_VERSION
-      value: "latest"
+    - name: DUMMY_DATABASE_PASSWORD
+      value: "admin"
     resources:
       limits:
-        cpu: "1"
-        memory: 1Gi
+        cpu: "100m"
+        memory: 100Mi
       requests:
-        cpu: "0.5"
-        memory: 500Mi
+        cpu: "50m"
+        memory: 50Mi
+    startupProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 30
+      failureThreshold: 5
+      timeoutSeconds: 1
+      successThreshold: 1
+      periodSeconds: 5
     livenessProbe:
       httpGet:
         path: /
         port: 80
       initialDelaySeconds: 30
+      failureThreshold: 5
+      timeoutSeconds: 1
+      successThreshold: 1
       periodSeconds: 5
     readinessProbe:
-      httpGet:
-        path: /
+      tcpSocket:
         port: 80
       initialDelaySeconds: 30
+      failureThreshold: 5
+      timeoutSeconds: 1
+      successThreshold: 1
       periodSeconds: 5
     volumeMounts:
-    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-      name: default-token-m2p72
+    - mountPath: /usr/share/nginx/html/
+      name: emptydir
       readOnly: true
   dnsPolicy: ClusterFirst
   enableServiceLinks: true
@@ -60,8 +87,6 @@ spec:
     operator: Exists
     tolerationSeconds: 300
   volumes:
-  - name: default-token-m2p72
-    secret:
-      defaultMode: 420
-      secretName: default-token-m2p72
+  - name: emptydir
+    emptyDir: {}
 
