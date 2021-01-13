@@ -1,0 +1,100 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  # creationTimestamp: "2021-01-08T02:41:59Z"
+  labels:
+    key: value
+    run: nginx
+  name: nginx
+  namespace: user-26
+  resourceVersion: "178032"
+  selfLink: /api/v1/namespaces/user-26/pods/nginx
+  uid: b3ad5db4-20ec-4a53-b027-f664892ef16c
+spec:
+  containers:
+  - name: nginx
+    imagePullPolicy: Always
+    image: nginx
+    env:
+    - name: DUMMY_DATABASE_PASSWORD
+      value: "admin"
+    resources: 
+      limits:
+        cpu: "100m"
+        memory: "100Mi"
+      requests:
+        cpu: "50m"
+        memory: "50Mi"
+    # terminationMessagePath: /dev/termination-log
+    # terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: default-token-82sbk
+      readOnly: true
+    - mountPath: /usr/share/nginx/html/
+      name: htmldir
+    ports:
+    - name: liveness-port
+      containerPort: 80
+      hostPort: 8080
+    livenessProbe:
+      httpGet:
+        path: /
+        port: liveness-port
+      initialDelaySeconds: 10
+      failureThreshold: 1
+      periodSeconds: 3
+    startupProbe:
+      httpGet:
+        path: /
+        port: liveness-port
+      failureThreshold: 3
+      periodSeconds: 5
+    readinessProbe:
+      tcpSocket:
+        port: 80
+      initialDelaySeconds: 10
+      periodSeconds: 5
+  - name: busybox
+    image: busybox
+    env:
+    - name: DUMMY_DATABASE_PASSWORD
+      value: "admin"
+    resources: 
+      limits:
+        cpu: "100m"
+        memory: "100Mi"
+      requests:
+        cpu: "50m"
+        memory: "50Mi"
+    command: ["/bin/sh", "-c", "--"]
+    args: ["while true; do echo $DUMMY_DATABASE_PASSWORD >> /html/index.html && sleep 5; done; "]
+    volumeMounts:
+    - mountPath: /html
+      name: htmldir
+  # dnsPolicy: ClusterFirst
+  # enableServiceLinks: true
+  # nodeName: gke-esun-lecture-1-pool-1-c4e080b1-7zgg
+  # priority: 0
+  # restartPolicy: Always
+  # schedulerName: default-scheduler
+  # securityContext: {}
+  # serviceAccount: default
+  # serviceAccountName: default
+  # terminationGracePeriodSeconds: 30
+  # tolerations:
+  # - effect: NoExecute
+  #   key: node.kubernetes.io/not-ready
+  #   operator: Exists
+  #   tolerationSeconds: 300
+  # - effect: NoExecute
+  #   key: node.kubernetes.io/unreachable
+  #   operator: Exists
+  #   tolerationSeconds: 300
+  volumes:
+  # - name: default-token-82sbk
+  #   secret:
+  #     defaultMode: 420
+  #     secretName: default-token-82sbk
+  - name: htmldir
+    emptyDir: {}
