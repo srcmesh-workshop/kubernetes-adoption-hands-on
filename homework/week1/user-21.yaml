@@ -1,0 +1,128 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: "2021-01-14T05:59:51Z"
+    labels:
+      run: nginx
+    name: nginx
+    namespace: user-21
+    resourceVersion: "2820480"
+    selfLink: /api/v1/namespaces/user-21/pods/nginx
+    uid: a763c952-2a5a-4705-b1f4-9af33bdb6232
+  spec:
+    containers:
+    - image: nginx:latest
+      imagePullPolicy: Always
+      name: nginx
+      env:
+      - name: DUMMY_DATABASE_PASSWORD
+        value: "admin"
+      resources:
+       requests:
+         memory: "50Mi"
+         cpu: "50m"
+       limits:
+         memory: "100Mi"
+         cpu: "100m"
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /usr/share/nginx/html
+        name: default-token-v955j
+        readOnly: true
+      livenessProbe:
+        httpGet:
+          path: /
+          port: 80
+        failureThreshold: 1
+        periodSeconds: 10
+      startupProbe:
+         httpGet:
+            path: /
+            port: 80
+         failureThreshold: 30
+         periodSeconds: 10
+      readinessProbe:
+        tcpSocket:
+          port: 80
+        initialDelaySeconds: 5
+        periodSeconds: 10
+      livenessProbe:
+        tcpSocket:
+          port: 80
+        initialDelaySeconds: 15
+        periodSeconds: 20
+    - name: busybox
+      image: busybox
+      command: ["/bin/bash"]
+      args: ["-c", "while true; do echo hello; sleep 10; done"]
+      volumeMounts:
+      - mountPath: /html
+        name: default-token-v955j
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: gke-esun-lecture-1-pool-4-4303c2db-nl3f
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: default
+    serviceAccountName: default
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: default-token-v955j
+      secret:
+        defaultMode: 420
+        secretName: default-token-v955j
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2021-01-14T05:59:51Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2021-01-14T05:59:52Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2021-01-14T05:59:52Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2021-01-14T05:59:51Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: docker://0f9e8b1b7556260df79de0303586e34fbb18db5e0bbff6405173581873125aaa
+      image: nginx:latest
+      imageID: docker-pullable://nginx@sha256:10b8cc432d56da8b61b070f4c7d2543a9ed17c2b23010b43af434fd40e2ca4aa
+      lastState: {}
+      name: nginx
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2021-01-14T05:59:52Z"
+    hostIP: 10.170.0.60
+    phase: Running
+    podIP: 10.60.3.19
+    podIPs:
+    - ip: 10.60.3.19
+    qosClass: BestEffort
+    startTime: "2021-01-14T05:59:51Z"
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
