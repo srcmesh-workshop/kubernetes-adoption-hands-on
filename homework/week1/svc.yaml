@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: "2021-01-08T02:51:40Z"
+  labels:
+    run: nginx
+  name: nginx-svc
+  namespace: user-18
+  resourceVersion: "175213"
+  selfLink: /api/v1/namespaces/user-18/services/nginx-svc
+  uid: e99762e0-5982-459a-b59a-3b82a0f7776c
+spec:
+  clusterIP: 10.64.10.40
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    run: nginx
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
