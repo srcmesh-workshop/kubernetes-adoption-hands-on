@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-1
+  labels:
+    version: "1"
+    app: nginx
+spec:
+  containers:
+    - name: nginx
+      image: nginx:latest
+      env:
+      - name: DUMMY_DATABASE_PASSWORD
+        value: "admin"
+      resources:
+        requests:
+          memory: "50Mi"
+          cpu: "50m"
+        limits:
+          memory: "100Mi"
+          cpu: "100m"
+      volumeMounts:
+        - mountPath: /usr/share/nginx/html
+          name: share-volume
+    - name: busybox
+      image: busybox:latest
+      command:
+        - watch
+        - echo 'Version 1' > /tmp/index.html
+      volumeMounts:
+        - mountPath: /tmp
+          name: share-volume
+
+      livenessProbe:
+        httpGet:
+          path: /healthz
+          port: 8080
+          httpHeaders:
+          - name: Custom-Header
+            value: Awesome
+        initialDelaySeconds: 3
+        periodSeconds: 3
+
+      startupProbe:
+        httpGet:
+          path: /healthz
+          port: liveness-port
+        failureThreshold: 30
+        periodSeconds: 10
+
+      readinessProbe:
+        tcpSocket:
+          port: 8080
+        initialDelaySeconds: 5
+        periodSeconds: 10
+
+
+  volumes:
+    - name: share-volume
+      emptyDir: {}
