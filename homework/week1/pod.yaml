@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2021-01-13T15:46:14Z"
+  labels:
+    run: test
+  name: test
+  namespace: user-18
+  resourceVersion: "2523659"
+  selfLink: /api/v1/namespaces/user-18/pods/test
+  uid: 9161b3f5-be79-4910-8315-bd3928abc000
+spec:
+  containers:
+  - image: nginx:latest
+    name: niginx
+    volumeMounts:
+    - mountPath: /usr/share/nginx/html
+      name: htmldir
+    env:
+      - name: DUMMY_DATABASE_PASSWORD
+        value: "admin"
+    resources:
+      requests:
+        memory: "50Mi"
+        cpu: "50m"
+      limits:
+        memory: "100Mi"
+        cpu: "100m"
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+        scheme: HTTP
+      initialDelaySeconds: 10
+      periodSeconds: 15
+    readinessProbe:
+      tcpSocket:
+        port: 80
+      initialDelaySeconds: 15
+      periodSeconds: 20
+  - image: busybox
+    name: busybox
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do echo $DUMMY_DATABASE_PASSWORD >> /html/index.html; sleep 10; done"]
+    resources: {}
+    volumeMounts:
+    - mountPath: /html
+      name: htmldir
+    env:
+      - name: DUMMY_DATABASE_PASSWORD
+        value: "admin"
+  volumes:
+  - name: htmldir
+    emptyDir: {}
+        
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: gke-esun-lecture-1-pool-4-4303c2db-jl39
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+
