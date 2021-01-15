@@ -92,11 +92,5 @@ spec:
     operator: Exists
     tolerationSeconds: 300
   volumes:
-  - name: default-token-cqm74
-    secret:
-      defaultMode: 420
-      secretName: default-token-cqm74
   - name: htmldir
-    emptyDir: {}
-  - name: html
     emptyDir: {}
