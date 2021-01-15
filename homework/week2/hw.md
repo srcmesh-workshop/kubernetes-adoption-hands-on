@@ -5,7 +5,7 @@
 ![](assets/example.png)
 
 * Nginx Image: https://hub.docker.com/_/nginx
-* MySQL Image: https://hub.docker.com/_/mysql
+* Wordpress Image: https://hub.docker.com/_/wordpress
 * Fluentd Image: https://hub.docker.com/_/fluentd
 * MySQL Image: https://hub.docker.com/_/mysql
 
