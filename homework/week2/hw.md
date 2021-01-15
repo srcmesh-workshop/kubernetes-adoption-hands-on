@@ -4,10 +4,10 @@
 
 ![](assets/example.png)
 
-Nginx Image: https://hub.docker.com/_/nginx
-MySQL Image: https://hub.docker.com/_/mysql
-Fluentd Image: https://hub.docker.com/_/fluentd
-MySQL Image: https://hub.docker.com/_/mysql
+* Nginx Image: https://hub.docker.com/_/nginx
+* MySQL Image: https://hub.docker.com/_/mysql
+* Fluentd Image: https://hub.docker.com/_/fluentd
+* MySQL Image: https://hub.docker.com/_/mysql
 
 * nginx
   * config path: `/etc/nginx/nginx.conf`
