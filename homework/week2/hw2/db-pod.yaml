@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: database
+  name: database
+  namespace: user-26
+spec:
+  containers:
+  - name: mysql
+    imagePullPolicy: Always
+    image: mysql
+    ports:
+    - name: mysql-port
+      containerPort: 3306
+    env:
+    - name: MYSQL_ROOT_PASSWORD
+      valueFrom:
+          secretKeyRef:
+            name: db-secrets
+            key: rootPassword
+    - name: MYSQL_USER
+      valueFrom:
+          secretKeyRef:
+            name: db-secrets
+            key: username
+    - name: MYSQL_PASSWORD
+      valueFrom:
+          secretKeyRef:
+            name: db-secrets
+            key: password
+    - name: MYSQL_DATABASE
+      valueFrom:
+          secretKeyRef:
+            name: db-secrets
+            key: database
+    resources: 
+      limits:
+        cpu: "1000m"
+        memory: "512Mi"
+      requests:
+        cpu: "500m"
+        memory: "256Mi"
+    volumeMounts:
+      - mountPath: "/etc/secrets"
+        name: secrets
+  volumes:
+    - name: secrets
+      secret:
+          secretName: db-secrets
+          defaultMode: 0400
+
+  
