@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mariadb
+  labels:
+    db: mariadb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      db: mariadb
+  serviceName: db-svc
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        db: mariadb
+    spec:
+      containers:
+      - image: bitnami/mariadb:10.3-debian-10
+        name: mariadb
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+          limits:
+            cpu: 1024m
+            memory: 1024Mi
+        env:
+        - name: MARIADB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-secret
+              key: root
+        - name: MARIADB_DATABASE
+          value: "wordpress"
+        - name: MARIADB_USER
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-secret
+              key: user
+        - name: MARIADB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-secret
+              key: password
+        ports:
+        - name: mariadb
+          containerPort: 3306
+        readinessProbe:
+          exec:
+            command: ["sh", "-c", "exec mysqladmin status -uroot -p$MARIADB_ROOT_PASSWORD"]
+          initialDelaySeconds: 15
+        livenessProbe:
+          exec:
+            command: ["sh", "-c", "exec mysqladmin ping -uroot -p$MARIADB_ROOT_PASSWORD"]
+          initialDelaySeconds: 120

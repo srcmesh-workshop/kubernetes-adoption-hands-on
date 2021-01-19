@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-svc
+  labels:
+    db: mariadb
+spec:
+  ports:
+  - name: mariadb
+    port: 3306
+  selector:
+    db: mariadb
+  type: ClusterIP
+  clusterIP: None

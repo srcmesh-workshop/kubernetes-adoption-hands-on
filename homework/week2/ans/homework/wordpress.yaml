@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress-deploy
+  labels:
+    app: wordpress
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+      - name: wordpress
+        image: arthurma/wordpress-nginx:5.6.0
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+          limits:
+            cpu: 1024m
+            memory: 1024Mi
+        livenessProbe: 
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 1
+        readinessProbe:
+          httpGet:
+            path: /wp-login.php
+            port: http
+          initialDelaySeconds: 80
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+          successThreshold: 1
+        env:
+        - name: WORDPRESS_BLOG_NAME
+          value: "TIME is money"
+        - name: MARIADB_HOST
+          value: "mariadb-0.db-svc"
+        - name: MARIADB_PORT_NUMBER
+          value: "3306"
+        - name: WORDPRESS_DATABASE_NAME
+          value: "wordpress"
+        - name: WORDPRESS_DATABASE_USER
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-secret
+              key: user
+        - name: WORDPRESS_DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-secret
+              key: password
+        ports:
+        - name: http
+          containerPort: 8080
+        volumeMounts:
+            - name: log-volume
+              mountPath: /opt/bitnami/nginx/logs/
+      - name: fluent-bit
+        image: fluent/fluent-bit:1.6.10
+        resources:
+          requests:
+            cpu: 64m
+            memory: 64Mi
+          limits:
+            cpu: 128m
+            memory: 128Mi
+        volumeMounts:
+            - name: config-volume
+              mountPath: /fluent-bit/etc/
+            - name: log-volume
+              mountPath: /var/log/
+      volumes:
+        - name: log-volume
+          emptyDir: {}
+        - name: config-volume
+          configMap:
+            name: fluent-bit-configmap
