@@ -4,7 +4,16 @@ metadata:
   name: wordpress-secret
 type: Opaque
 data:
+  username: dXNlcg==
+  password: cGFzc3dvcmQ=
   rootpassword: cGFzc3dvcmQ=
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wdcfgmap
+data:
+  database: test_database
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -27,13 +36,23 @@ spec:
         - name: wordpress-port
           containerPort: 80
         env:
+        - name: WORDPRESS_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-secret
+              key: username
         - name: WORDPRESS_DB_PASSWORD
           valueFrom:
             secretKeyRef:
               name: wordpress-secret
-              key: rootpassword
+              key: password
         - name: WORDPRESS_DB_HOST
-          value: mysql-svc.user-4
+          value: mysql-svc.user-4:3306
+        - name: WORDPRESS_DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: wdcfgmap
+              key: database
 ---
 apiVersion: v1
 kind: Service
