@@ -1,0 +1,71 @@
+# pod
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+  namespace: user-35
+spec:
+  containers:
+  - image: nginx
+    imagePullPolicy: Always
+    name: nginx
+    volumeMounts:
+    - name: nginx-conf
+      mountPath: /etc/nginx/nginx.conf
+      subPath: nginx.conf
+    - mountPath:  /var/log/nginx
+      name: logdir
+  - image: fluentd
+    name: fluentd
+    volumeMounts:
+    - name: fluentd-conf
+      mountPath: /fluentd/etc/fluent.conf
+      subPath: fluentd.conf
+    - mountPath:  /logs/nginx
+      name: logdir    
+  volumes:
+    - name: nginx-conf
+      configMap:
+        name: nginx-conf
+    - name: fluentd-conf
+      configMap:
+       name: fluentd-conf
+    - name: logdir
+      hostPath:
+        path: /nginx
+---
+# nodeport
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+  name: nginx-np
+  namespace: user-35
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+    nodePort: 30080
+  selector:
+    app: nginx
+  type: NodePort
+---
+# ing
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: hw2
+  namespace: user-35
+spec:
+  rules:
+    - host: hw2-user35.com
+      http:
+        paths:
+        - path: /
+          backend:
+            serviceName: nginx
+            servicePort: 80
