@@ -1,0 +1,60 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluentd-conf
+data:
+  fluentd.conf:  |
+     <source>
+       type tail
+       path /var/www/nginx/access.log
+       tag nginx.access
+       format nginx
+     </source>
+     <source>
+       @type tail
+       format /^(?<time>\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}) \[(?<log_level>\w+)\] (?<pid>\d+).(?<tid>\d+): (?<message>.*)$/
+       tag nginx.error
+       path /var/www/nginx/error.log
+     </source>
+     <match nginx.access>
+       @type stdout
+     </match>
+     <match nginx.error>
+       @type stdout
+     </match>
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd
+  labels:
+    name: fluentd
+spec:
+  selector:
+    matchLabels:
+      name: fluentd
+  template:
+    metadata:
+      labels:
+        name: fluentd
+    spec:
+      containers:
+      - name: fluentd
+        image: fluentd
+        volumeMounts:
+        - name: fluentd-persistent-storage
+          mountPath: /var/log
+      #terminationGracePeriodSeconds: 30
+        - name: fluentd-config
+          mountPath: /fluentd/etc/fluent.conf
+          subPath: fluentd.conf
+          readOnly: true
+      volumes:
+      - name: fluentd-persistent-storage
+        hostPath:
+          path: /var/log
+      - name: fluentd-config
+        configMap:
+          name: fluentd-conf
+
