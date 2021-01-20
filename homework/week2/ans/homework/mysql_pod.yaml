@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: mysql
+  name: mysql
+  namespace: user-27
+spec:
+  containers:
+  - image: mysql:8.0
+    imagePullPolicy: Always
+    name: mysql
+    env:
+    - name: MYSQL_USER
+      valueFrom:
+        secretKeyRef:
+          name: mysql-secret
+          key: username
+    - name: MYSQL_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: mysql-secret
+          key: password
+    - name: MYSQL_DATABASE
+      valueFrom:
+        secretKeyRef:
+          name: mysql-secret
+          key: database
+    - name: MYSQL_ROOT_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: mysql-secret
+          key: root_pass
+    resources:
+      limits:
+        cpu: "100m"
+        memory: 500Mi
+      requests:
+        cpu: "50m"
+        memory: 500Mi
+    startupProbe:
+      exec:
+        command:
+          - /bin/bash
+          - -ec
+          - |
+            password_aux="${MYSQL_ROOT_PASSWORD:-}"
+            if [[ -f "${MYSQL_ROOT_PASSWORD_FILE:-}" ]]; then
+                password_aux=$(cat "$MYSQL_ROOT_PASSWORD_FILE")
+            fi
+            mysqladmin status -uroot -p"${password_aux}"
+      initialDelaySeconds: 120
+      failureThreshold: 5
+      timeoutSeconds: 1
+      successThreshold: 1
+      periodSeconds: 5
+    livenessProbe:
+      exec:
+        command:
+          - /bin/bash
+          - -ec
+          - |
+            password_aux="${MYSQL_ROOT_PASSWORD:-}"
+            if [[ -f "${MYSQL_ROOT_PASSWORD_FILE:-}" ]]; then
+                password_aux=$(cat "$MYSQL_ROOT_PASSWORD_FILE")
+            fi
+            mysqladmin status -uroot -p"${password_aux}"
+      initialDelaySeconds: 120
+      failureThreshold: 5
+      timeoutSeconds: 1
+      successThreshold: 1
+      periodSeconds: 5
+    readinessProbe:
+      exec:
+        command:
+          - /bin/bash
+          - -ec
+          - |
+            password_aux="${MYSQL_ROOT_PASSWORD:-}"
+            if [[ -f "${MYSQL_ROOT_PASSWORD_FILE:-}" ]]; then
+                password_aux=$(cat "$MYSQL_ROOT_PASSWORD_FILE")
+            fi
+            mysqladmin status -uroot -p"${password_aux}"
+      initialDelaySeconds: 120
+      failureThreshold: 5
+      timeoutSeconds: 1
+      successThreshold: 1
+      periodSeconds: 5
+  restartPolicy: Always
+

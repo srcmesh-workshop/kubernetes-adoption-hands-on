@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+  namespace: user-27
+spec:
+  containers:
+  - image: fluentd:latest
+    imagePullPolicy: Always
+    name: fluentd
+    resources:
+      limits:
+        cpu: "100m"
+        memory: 200Mi
+      requests:
+        cpu: "50m"
+        memory: 100Mi
+    volumeMounts:
+    - mountPath: /logs/nginx/
+      name: nginx-log
+    - mountPath: /fluentd/etc/
+      name: fluentd-conf
+  - image: nginx:latest
+    imagePullPolicy: Always
+    name: nginx
+    resources:
+      limits:
+        cpu: "100m"
+        memory: 200Mi
+      requests:
+        cpu: "50m"
+        memory: 100Mi
+    volumeMounts:
+    - mountPath: /var/log/nginx/
+      name: nginx-log
+    - mountPath: /etc/nginx/
+      name: nginx-conf
+  restartPolicy: Always
+  volumes:
+  - name: nginx-log
+    emptyDir: {}
+  - name: nginx-conf
+    configMap:
+      name: nginx-config
+  - name: fluentd-conf
+    configMap:
+      name: fluentd-config
