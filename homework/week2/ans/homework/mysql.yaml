@@ -15,7 +15,7 @@ metadata:
   name: mysql-cfgmap
 data:
   db_host: mysql-svc
-  db_name: Test_1234
+  db_name: test
 
 ---
 
@@ -24,7 +24,7 @@ kind: StatefulSet
 metadata:
   name: mysql
 spec:
-  serviceName: "mysql-svc"
+  serviceName: mysql-svc
   # replicas: 1
   selector:
     matchLabels:
