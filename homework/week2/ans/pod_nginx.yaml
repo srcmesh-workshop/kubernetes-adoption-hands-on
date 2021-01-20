@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: nginx
+  name: pod-nginx
+  namespace: user-5
+spec:
+  containers:
+  - image: nginx:latest
+    name: nginx
+    resources: {}
+    volumeMounts:
+    - name: config-nginx
+      mountPath: "/etc/nginx/"
+      readOnly: true
+    - name: logdir
+      mountPath: "/var/log/nginx"
+  - image: fluentd:latest
+    name: fluentd
+    resources: {}
+    volumeMounts:
+    - name: config-fluentd
+      mountPath: "/fluentd/etc/"
+      readOnly: true
+    - name: logdir
+      mountPath: "/logs"
+  volumes:
+  - name: config-nginx
+    configMap:
+      name: config
+  - name: config-fluentd
+    configMap:
+      name: config
+  - name: logdir
+    emptyDir: {}
+  

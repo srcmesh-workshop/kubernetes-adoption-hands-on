@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: mysql
+  name: pod-mysql
+  namespace: user-5
+spec:
+  containers:
+  - image: mysql:5.7
+    name: mysql
+    resources: {}
+    env:
+      - name: MYSQL_DATABASE
+        value: wordpress
+      - name: MYSQL_USER
+        valueFrom:
+            secretKeyRef:
+              name: secret-mysql
+              key: userName
+      - name: MYSQL_PASSWORD
+        valueFrom:
+            secretKeyRef:
+              name: secret-mysql
+              key: password
+      - name: MYSQL_ROOT_PASSWORD
+        valueFrom:
+            secretKeyRef:
+              name: secret-mysql
+              key: rootPassword

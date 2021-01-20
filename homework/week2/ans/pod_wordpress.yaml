@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: wordpress
+  name: pod-wordpress
+  namespace: user-5
+spec:
+  containers:
+  - image: wordpress:latest
+    name: wordpress
+    resources: {}
+    env:
+      - name: WORDPRESS_DB_USER
+        valueFrom:
+            secretKeyRef:
+              name: secret-mysql
+              key: userName
+      - name: WORDPRESS_DB_PASSWORD
+        valueFrom:
+            secretKeyRef:
+              name: secret-mysql
+              key: password
+      - name: WORDPRESS_DB_HOST
+        value: svc-mysql.user-5:3306

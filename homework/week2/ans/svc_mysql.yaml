@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-mysql
+  namespace: user-5
+spec:
+  selector:
+    run: mysql
+  ports:
+  - protocol: TCP
+    port: 3306
+    targetPort: 3306

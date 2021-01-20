@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-wordpress
+  namespace: user-5
+spec:
+  selector:
+    run: wordpress
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
