@@ -1,0 +1,11 @@
+kubectl exec database -it -- mysql --user=user26 --password hw2
+echo  'linuxhint.com' | base64
+
+mysql: [ERROR] unknown option '--"'.
+echo -n 'secret' | base64
+
+kubectl create configmap nginx-conf --from-file=./nginx.conf -o yaml > nginx-conf.yaml
+
+kubectl create configmap fluend-conf --from-file=./fluend.conf -o yaml > fluend-conf.yaml
+
+
