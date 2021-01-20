@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2021-01-20T02:53:43Z"
+  labels:
+    run: fluentd
+  name: fluentd
+  namespace: user-14
+  resourceVersion: "5725047"
+  selfLink: /api/v1/namespaces/user-14/pods/fluentd
+  uid: 127c3969-73b1-457e-ae0c-de2a05618ba5
+spec:
+  containers:
+  - image: fluentd:latest
+    name: fluentd
+    volumeMounts:
+    - mountPath: /etc/fluentd
+      name: fluentd-config-colume
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: gke-esun-lecture-1-pool-4-4303c2db-k8i6
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  volumes:
+  - name: fluentd-config-colume
+    configMap:
+      name: fluentd-conf
+      items:
+      - key: fluentd.conf
+        path: fluent.conf
+
