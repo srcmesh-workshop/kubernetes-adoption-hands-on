@@ -3,7 +3,7 @@
 建立 dnsutils Pod
 
 ```
-kubectl apply -f https://k8s.io/examples/admin/dns/dnsutils.yaml
+kubectl apply -f v
 
 kubectl exec -i -t dnsutils -- nslookup <svc>.<namespace>
 ```

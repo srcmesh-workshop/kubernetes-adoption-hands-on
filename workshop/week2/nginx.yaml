@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: nginx-fluentd
+  name: nginx-fluentd
+  namespace: user-28
+spec:
+  containers:
+  - image: fluentd:latest
+    name: fluentd
+    volumeMounts:
+    - name: nginx-log-dir
+      mountPath: /logs
+    - name: cfgmap-fluent
+      mountPath: /fluentd/etc
+  - image: nginx:latest
+    name: nginx
+    resources: {}
+    volumeMounts:
+    - name: nginx-log-dir
+      mountPath: /var/log/nginx
+    - name: cfgmap-nginx
+      mountPath: /etc/nginx
+  volumes:
+  - name: nginx-log-dir
+    emptyDir: {}
+  - name: cfgmap-nginx
+    configMap:
+      name: nginx-conf
+      defaultMode: 0644
+  - name: cfgmap-fluent
+    configMap:
+      name: fluent-conf
+      defaultMode: 0644
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    run: nginx-fluentd
+  name: nginx-external-name
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    run: nginx-fluentd

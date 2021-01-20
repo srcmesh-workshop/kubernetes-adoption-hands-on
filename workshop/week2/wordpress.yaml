@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-wordpress
+spec:
+  ports:
+    - port: 80
+  selector:
+    app: wordpress
+  clusterIP: None
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wordpress-pv-claim
+  labels:
+    app: wordpress
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+#---
+#### same with mysql.yaml
+#apiVersion: v1
+#kind: Secret
+#metadata:
+#  name: mysecret
+#type: Opaque
+#data:
+#  myrootpwd: MTIzNDU2
+#  myusername: ZXN1bg==
+#  myuserpwd: NjU0MzIx
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: wordpress
+  name: wordpress
+spec:
+  containers:
+  - name: wordpress
+    image: wordpress:4.8-apache
+    imagePullPolicy: IfNotPresent
+    env:
+    - name: WORDPRESS_DB_HOST
+      value: service-mysql.user-28
+    - name: WORDPRESS_DB_USER
+      valueFrom:
+        secretKeyRef:
+          name: mysecret
+          key: myusername
+    - name: WORDPRESS_DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: mysecret
+          key: myuserpwd
+    ports:
+    - containerPort: 80
+      name: worpress
+      protocol: TCP
+    volumeMounts:
+    - name: wordpress-persistent-storage
+      mountPath: /var/www/html
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+      failureThreshold: 3
+      periodSeconds: 3
+  volumes:
+  - name: wordpress-persistent-storage
+    persistentVolumeClaim:
+      claimName: wordpress-pv-claim
