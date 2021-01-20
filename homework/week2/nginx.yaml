@@ -1,0 +1,167 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  namespace: user-12
+  labels:
+    app: nginx
+spec:
+  containers:
+    - name: nginx
+      image: nginx
+      resources:
+        limits:
+          cpu: "100m"
+          memory: "500Mi"
+      livenessProbe:
+        httpGet:
+          path: /
+          port: 80
+          scheme: HTTP
+        initialDelaySeconds: 10
+        periodSeconds: 15
+        timeoutSeconds: 1
+        failureThreshold: 3
+      startupProbe:
+        httpGet:
+          path: /
+          port: 80
+          scheme: HTTP
+        initialDelaySeconds: 5
+        periodSeconds: 10
+        timeoutSeconds: 1
+        failureThreshold: 3
+      readinessProbe:
+        tcpSocket:
+          port: 80
+        initialDelaySeconds: 5
+        periodSeconds: 10
+        timeoutSeconds: 1
+        failureThreshold: 3
+      volumeMounts:
+        - mountPath: /var/log/nginx
+          name: share-logs
+        - mountPath: /etc/nginx/
+          name: nginx-conf
+          readOnly: true
+    - name: fluentd
+      image: fluentd
+      resources:
+        limits:
+          cpu: "500m"
+          memory: "500Mi"
+      volumeMounts:
+        - mountPath: /logs
+          name: share-logs
+        - mountPath: /fluentd/etc
+          name: fluent-conf
+          readOnly: true
+  volumes:
+    - name: share-logs
+      emptyDir: {}
+    - name: nginx-conf
+      configMap:
+        name: nginx-conf
+        items:
+          - key: nginx.conf # key name in configmap
+            path: nginx.conf # file name in container
+    - name: fluent-conf
+      configMap:
+        name: fluent-conf
+        items:
+          - key: fluent.conf
+            path: fluent.conf
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-conf
+  namespace: user-12
+data:
+  nginx.conf: |
+    user  nginx;
+    worker_processes  1;
+
+    error_log  /var/log/nginx/error.log warn;
+    pid        /var/run/nginx.pid;
+
+    events {
+        worker_connections  1024;
+    }
+
+    http {
+        log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                          '$status $body_bytes_sent "$http_referer" '
+                          '"$http_user_agent" "$http_x_forwarded_for"';
+
+        # Path to access.log & error.log
+        access_log /var/log/nginx/access.log  main;
+        error_log /var/log/nginx/error.log  warn;
+
+        sendfile        on;
+        keepalive_timeout  65;
+        gzip  on;
+
+        upstream backend {
+            # must match the target service name
+            server wordpress-svc:80;
+        }
+
+        server {
+            listen       80;
+            location / {
+                # $http_host is the host name that users seen on the browser URL
+                # and it equals to `HTTP_HOST` request header.
+                proxy_set_header Host $http_host;
+
+                # You have to change this according to your setup.
+                proxy_pass http://wordpress-svc;
+
+                # Modify `Location` of 301 or 302 HTTP response, so
+                # that the browser will follow the correct location.
+                proxy_redirect ~^http://[^/]*/(.*) http://$http_host/$1;
+            }
+        }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-conf
+  namespace: user-12
+data:
+  fluent.conf: |
+    <source>
+      type tail
+      path /logs/**/access.log
+      tag nginx.access
+      format nginx
+    </source>
+
+    <source>
+      @type tail
+      format /^(?<time>\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}) \[(?<log_level>\w+)\] (?<pid>\d+).(?<tid>\d+): (?<message>.*)$/
+      tag nginx.error
+      path /logs/**/error.log
+    </source>
+
+    <match nginx.access>
+      @type stdout
+    </match>
+
+    <match nginx.error>
+      @type stdout
+    </match>
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-svc
+  namespace: user-12
+spec:
+  selector:
+    app: nginx
+  ports:
+  - port: 8888
+    targetPort: 80
+  type: LoadBalancer
