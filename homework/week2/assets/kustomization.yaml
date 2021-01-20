@@ -1,0 +1,17 @@
+secretGenerator:
+- name: mysql-pass
+  literals:
+  - password=password
+
+configMapGenerator:
+- name: nginx-conf
+  files:
+  - nginx.conf
+- name: fluentd-conf
+  files:
+  - fluent.conf
+
+resources:
+- mysql.yaml
+- wordpress.yaml
+- nginx.yaml

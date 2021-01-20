@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      run: nginx
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-conf
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+          readOnly: true
+        - name: log-volume
+          mountPath: /var/log/nginx
+      - name: fluentd
+        image: fluentd
+        volumeMounts:
+        - name: fluentd-conf
+          mountPath: /fluentd/etc
+        - name: log-volume
+          mountPath: /logs
+      volumes:
+      - name: nginx-conf
+        configMap:
+          name: nginx-conf
+      - name: fluentd-conf
+        configMap:
+          name: fluentd-conf
+      - name: log-volume
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  labels:
+    run: nginx
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    protocol: TCP
+    nodePort: 30001
+  selector:
+    run: nginx  
