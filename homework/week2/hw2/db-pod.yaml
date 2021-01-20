@@ -1,4 +1,17 @@
 apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pv-claim
+  labels:
+    db: mysql
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
 kind: Pod
 metadata:
   labels:
@@ -42,12 +55,20 @@ spec:
         cpu: "500m"
         memory: "256Mi"
     volumeMounts:
-      - mountPath: "/etc/secrets"
+      - mountPath: /etc/secrets/
         name: secrets
+    
+      - name: mysql-persistent-storage
+        mountPath: /var/lib/mysql
+      
   volumes:
     - name: secrets
       secret:
-          secretName: db-secrets
-          defaultMode: 0400
+        secretName: db-secrets
+        defaultMode: 0400
+    - name: mysql-persistent-storage
+      persistentVolumeClaim:
+        claimName: mysql-pv-claim  
+        
 
   
