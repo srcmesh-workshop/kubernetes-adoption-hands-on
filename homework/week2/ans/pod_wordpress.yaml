@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: wordpress
+  labels:
+    app: wordpress
+spec:
+  containers:
+  - image: wordpress:4.8-apache
+    name: wordpress
+    env:
+    - name: WORDPRESS_DB_USER
+      value: root
+    - name: WORDPRESS_DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: mysql-secret
+          key: password
+    - name: WORDPRESS_DB_HOST
+      value: mysql-svc.user-18.svc:3306
+    resources: {}
