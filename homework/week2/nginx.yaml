@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2021-01-19T14:54:36Z"
+  labels:
+    run: nginx
+  name: nginx
+  namespace: user-14
+  resourceVersion: "5474842"
+  selfLink: /api/v1/namespaces/user-14/pods/nginx
+  uid: de9e1555-5425-43d4-b4d3-c98302079062
+spec:
+  containers:
+  - image: nginx:latest
+    name: nginx
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - mountPath: /etc/nginx
+      name: nginx-config-volume
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: gke-esun-lecture-1-pool-4-4303c2db-mivr
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  volumes:
+  - name: nginx-config-volume
+    configMap:
+      name: nginx-config
+      items:
+      - key: nginx.conf
+        path: nginx.conf
