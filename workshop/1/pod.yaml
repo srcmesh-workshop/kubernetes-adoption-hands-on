@@ -18,6 +18,29 @@ spec:
     volumeMounts:
     - name: htmldir
       mountPath: /usr/share/nginx/html
+    startupProbe:
+      httpGet:
+        path: /
+        port: 80
+        httpHeaders:
+        - name: user8-Header
+          value: hw1
+      initialDelaySeconds: 10
+      periodSeconds: 10
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+        httpHeaders:
+        - name: user8-Header
+          value: hw1
+      initialDelaySeconds: 10
+      periodSeconds: 10
+    readinessProbe:
+      tcpSocket:
+        port: 80
+      initialDelaySeconds: 10
+      periodSeconds: 10
   - name: busybox
     env:
     - name: DUMMY_DATABASE_PASSWORD
