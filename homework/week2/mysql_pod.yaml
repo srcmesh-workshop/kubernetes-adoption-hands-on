@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: mysql
+  name: mysql
+  namespace: user-17
+spec:
+  containers:
+  - image: mysql
+    imagePullPolicy: Always
+    name: mysql
+    env:
+    - name: MYSQL_ROOT_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: mysql-secret
+          key: rootpassword
+    - name: MYSQL_DATABASE
+      valueFrom:
+        secretKeyRef:
+          name: mysql-secret
+          key: dbname
+    resources: 
+      limits:
+        memory: "512Mi"
+        cpu: "200m"
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
