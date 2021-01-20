@@ -1,0 +1,7 @@
+secretGenerator:
+- name: mysql-pass
+  literals:
+  - password=hahaha
+resources:
+  - sql.yaml
+  - word.yaml
