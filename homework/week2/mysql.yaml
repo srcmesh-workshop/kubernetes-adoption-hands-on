@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: mysql
+  name: mysql
+  namespace: user-25
+spec:
+  containers:
+  - name: mysql
+    image: mysql
+    imagePullPolicy: Always
+    resources: {}
+    env:
+    - name: MYSQL_ROOT_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: mysecret
+          key: rootpassword
+    - name: MYSQL_USER
+      valueFrom:
+        secretKeyRef:
+          name: mysecret
+          key: username
+    - name: MYSQL_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: mysecret
+          key: password
+    ports:
+    - containerPort: 3306
+      name: mysql-port 
+    volumeMounts:
+    - name: wordpress-persistent-storage
+      mountPath: /var/lib/mysql
+  volumes:
+  - name: wordpress-persistent-storage
+    persistentVolumeClaim:
+      claimName: wp-pv-claim
