@@ -9,6 +9,7 @@ data:
   user_passwd: cGFzc3dvcmQ=
   
 ---
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
