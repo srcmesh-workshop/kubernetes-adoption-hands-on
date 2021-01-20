@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: "2021-01-20T02:48:42Z"
+  labels:
+    run: nginx
+  name: nginx
+  namespace: user-14
+  resourceVersion: "5723304"
+  selfLink: /api/v1/namespaces/user-14/services/nginx
+  uid: f0d697a7-105d-4351-9560-41f383cf57f6
+spec:
+  clusterIP: 10.64.5.214
+  externalTrafficPolicy: Cluster
+  ports:
+  - nodePort: 31562
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    run: nginx
+  sessionAffinity: None
+  type: NodePort
+status:
+  loadBalancer: {}
