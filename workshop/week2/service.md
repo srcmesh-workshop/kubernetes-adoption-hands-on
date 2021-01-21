@@ -1,4 +1,4 @@
-kb# Service
+# Service
 
 建立 dnsutils Pod
 
