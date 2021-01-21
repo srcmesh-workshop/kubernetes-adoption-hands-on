@@ -1,0 +1,169 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  ports:
+    - port: 80
+  selector:
+    app: nginx
+    tier: frontend
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-conf-volume
+  labels:
+    app: nginx
+data: 
+  nginx.conf: |
+    user  nginx;
+    worker_processes  1;
+
+    error_log  /var/log/nginx/error.log warn;
+    pid        /var/run/nginx.pid;
+
+    events {
+        worker_connections  1024;
+    }
+
+    http {
+        log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                          '$status $body_bytes_sent "$http_referer" '
+                          '"$http_user_agent" "$http_x_forwarded_for"';
+
+        # Path to access.log & error.log
+        access_log /var/log/nginx/access.log  main;
+        error_log /var/log/nginx/error.log  warn;
+
+        sendfile        on;
+        keepalive_timeout  65;
+        gzip  on;
+
+        upstream backend {
+            # must match the target service name
+            server wordpress:80;
+        }
+
+        server {
+            listen       80;
+            location / {
+                # $http_host is the host name that users seen on the browser URL
+                # and it equals to `HTTP_HOST` request header.
+                proxy_set_header Host $http_host;
+
+                # You have to change this according to your setup.
+                proxy_pass http://wordpress.user-13/;
+
+                # Modify `Location` of 301 or 302 HTTP response, so
+                # that the browser will follow the correct location.
+                proxy_redirect ~^http://[^/]*/(.*) http://$http_host/$1;
+            }
+        }
+    }
+  
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2021-01-20T11:04:14Z"
+  labels:
+    run: nginx
+  name: nginx
+  namespace: user-13
+  resourceVersion: "5899187"
+  selfLink: /api/v1/namespaces/user-13/pods/nginx
+  uid: 65636495-b2d5-4d70-85ae-f52283f9e03b
+spec:
+  containers:
+  - image: nginx:latest
+    imagePullPolicy: Always
+    name: nginx
+    resources: {}
+    volumeMounts:
+    - name: nginx-conf-volume
+      mountPath: /etc/nginx
+      readOnly: true
+    - name: logs
+      mountPath: /var/log/nginx
+  - image: fluentd
+    imagePullPolicy: Always
+    name: fluentd
+    resources: {}
+    volumeMounts:
+    - mountPath: /etc/fluentd
+      name: fluentd-conf
+    - name: logs
+      mountPath: /logs/nginx
+  volumes:
+  - name: nginx-conf-volume
+    configMap:
+      name: nginx-conf-volume
+  - name: fluentd-conf
+    configMap:
+      name: fluentd-conf
+  - name: logs
+    emptyDir: {}
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: gke-esun-lecture-1-pool-4-4303c2db-2fvf
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2021-01-20T11:04:14Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2021-01-20T11:04:14Z"
+    message: 'containers with unready status: [nginx]'
+    reason: ContainersNotReady
+    status: "False"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2021-01-20T11:04:14Z"
+    message: 'containers with unready status: [nginx]'
+    reason: ContainersNotReady
+    status: "False"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2021-01-20T11:04:14Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - image: nginx/latest
+    imageID: ""
+    lastState: {}
+    name: nginx
+    ready: false
+    restartCount: 0
+    started: false
+    state:
+      waiting:
+        message: Back-off pulling image "nginx/latest"
+        reason: ImagePullBackOff
+  hostIP: 10.170.0.16
+  phase: Pending
+  podIP: 10.60.2.52
+  podIPs:
+  - ip: 10.60.2.52
+  qosClass: BestEffort
+  startTime: "2021-01-20T11:04:14Z"
