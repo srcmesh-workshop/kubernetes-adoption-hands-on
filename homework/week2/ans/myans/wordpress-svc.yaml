@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: wordpress
+  labels:
+    app: wordpress
+spec:
+  containers:
+  - name: wordpress
+    image: wordpress:4.8-apache
+    ports:
+    - name: wordpress
+      containerPort: 80
+    env:
+      - name: WORDPRESS_DB_HOST
+        value: mysql-svc.user-15.svc:3306
+      - name: WORDPRESS_DB_USER
+        value: root
+      - name: WORDPRESS_DB_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: mysecret
+            key: user-password
+    resources: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-svc
+  labels:
+    app: wordpress-svc
+spec:
+  ports:
+    - port: 80
+  selector:
+    app: wordpress
+  type: LoadBalancer
