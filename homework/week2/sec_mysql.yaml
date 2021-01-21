@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysecret
+type: Opaque
+data:
+  username: YWRtaW4=
+  password: cGFzc3dvcmQ=
+  rootPassword: ZXN1bkAxMzEz
+  database: bXlzcWw=
+  db-password: ZXN1bkAxMzEz
+  auth_key: ZXN1bkAxMzEz
+  secure_auth_key: ZXN1bkAxMzEz
+  logged_in_key: ZXN1bkAxMzEz
+  nonce_key: ZXN1bkAxMzEz
