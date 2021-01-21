@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-fluend-with-volumne
+  labels:
+    app1: nginx
+    app2: fluentd
+spec:
+  containers:
+  - image: nginx:latest
+    name: nginx
+    volumeMounts:
+    - mountPath: /etc/nginx 
+      readOnly: true
+      name: nginx-conf
+    - mountPath: /var/log/nginx
+      name: logdir
+    resources: {}
+  - image: fluentd:latest
+    name: fluentd
+    volumeMounts:
+    - mountPath: /etc/fluent/config.d
+      readOnly: true
+      name: fluentd-conf
+    - mountPath: /logs
+      name: logdir
+    resources: {}
+  volumes:
+  - name: logdir
+    emptyDir: {}
+  - name: nginx-conf
+    configMap:
+      name: nginx-conf
+  - name: fluentd-conf
+    configMap:`
+      name: fluentd-conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app1: nginx 
