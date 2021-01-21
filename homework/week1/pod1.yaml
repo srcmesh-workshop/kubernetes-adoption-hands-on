@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: nginx
+  name: nginx
+spec:
+  containers:
+  - image: nginx
+    name: nginx
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "50Mi"
+      limits:
+        cpu: "100m"
+        memory: "100Mi"
+    volumeMounts:
+    - name: htmldir
+      mountPath: /usr/share/nginx/html
+    startupProbe:
+      httpGet:
+        path: /
+        port: 80
+        httpHeaders:
+        - name: user8-Header
+          value: hw1
+      initialDelaySeconds: 10
+      periodSeconds: 10
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+        httpHeaders:
+        - name: user8-Header
+          value: hw1
+      initialDelaySeconds: 10
+      periodSeconds: 10
+    readinessProbe:
+      tcpSocket:
+        port: 80
+      initialDelaySeconds: 10
+      periodSeconds: 10
+  - name: busybox
+    env:
+    - name: DUMMY_DATABASE_PASSWORD
+      value: admin
+    image: busybox
+    volumeMounts:
+    - name: htmldir
+      mountPath: /html
+    command: [ "/bin/sh", "-c", "--" ]
+    args: [ "while true; do echo $DUMMY_DATABASE_PASSWORD >> /html/index.html && sleep 5; done;" ]
+  volumes:
+    - name: htmldir
+      emptyDir: {}
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2021-01-14T07:27:30Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2021-01-14T07:36:30Z"
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2021-01-14T07:36:30Z"
+    status: "True"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2021-01-14T07:27:30Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: docker://d87497b8ac87e8e7bcb00e447998fdca3bbaf3ce9daed785d3359723c3bc94ba
+    image: nginx:latest
+    imageID: docker-pullable://nginx@sha256:10b8cc432d56da8b61b070f4c7d2543a9ed17c2b23010b43af434fd40e2ca4aa
+    lastState: {}
+    name: nginx
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2021-01-14T07:36:30Z"
+  hostIP: 10.170.15.203
+  phase: Running
+  podIP: 10.60.9.3
+  podIPs:
+  - ip: 10.60.9.3
+  qosClass: BestEffort
+  startTime: "2021-01-14T07:27:30Z"
