@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-svc
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+  selector:
+    run: nginx
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels: 
+    run: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: nginx
+  template:
+    metadata:
+      labels:
+        run: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: htmldir
+          mountPath: /usr/share/nginx/html/
+        - name: nginx-conf-volume
+          mountPath: /etc/nginx/
+      - name: fluentd
+        imagePullPolicy: Always
+        image: fluentd
+        volumeMounts:
+        - name: fluentd-conf-volume
+          mountPath: /fluentd/etc
+        - name: nginx-logs-volume
+          mountPath: /logs
+        env:
+        - name: FLUENTD_CONF
+          value: fluent.conf
+      volumes:
+      - name: htmldir
+        emptyDir: {}
+      - name: nginx-conf-volume
+        configMap:
+          name: nginx-conf
+          items:
+          - key: nginx.conf
+            path: nginx.conf
+      - name: nginx-logs-volume
+        emptyDir: {}
+      - name: fluentd-conf-volume
+        configMap:
+          name: fluentd-conf
