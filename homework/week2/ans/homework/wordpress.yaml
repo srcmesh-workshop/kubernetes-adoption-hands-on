@@ -31,7 +31,7 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 1
           successThreshold: 1
-          failureThreshold: 1
+          failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /wp-login.php
@@ -39,7 +39,7 @@ spec:
           initialDelaySeconds: 80
           periodSeconds: 10
           timeoutSeconds: 5
-          failureThreshold: 6
+          failureThreshold: 3
           successThreshold: 1
         env:
         - name: WORDPRESS_BLOG_NAME
