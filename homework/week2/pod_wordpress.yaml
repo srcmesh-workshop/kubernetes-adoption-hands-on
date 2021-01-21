@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+  labels:
+    app: wordpress
+spec:
+  selector:
+    matchLabels:
+      app: wordpress
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: wordpress
+        tier: frontend
+    spec:
+      containers:
+        - name: wordpress
+          image: wordpress
+          env:
+            - name: WORDPRESS_DB_HOST
+              value: mysql-svc.user-9
+            - name: WORDPRESS_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysecret
+                  key: username
+            - name: WORDPRESS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysecret
+                  key: password
+            - name: WORDPRESS_DB_NAME
+              value: database
+          ports:
+          - containerPort: 80
