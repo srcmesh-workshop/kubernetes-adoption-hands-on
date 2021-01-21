@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: Deployment
+metadata:
+  labels:
+    run: nginx-deployment
+  name: nginx-deployment
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        
+  containers:
+  - image: nginx
+    imagePullPolicy: Always
+    name: pod-nginx
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: default-token-q6hlx
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: gke-esun-lecture-1-pool-4-4303c2db-skz6
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - name: default-token-q6hlx
+    secret:
+      defaultMode: 420
+      secretName: default-token-q6hlx
+  - name: nginx-conf-volume
+    configMap:
+      name: configmap-nginx
+      items:
+        - key: nginx.conf
+          path: nginx.conf
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2021-01-20T08:57:44Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2021-01-20T08:57:46Z"
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2021-01-20T08:57:46Z"
+    status: "True"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2021-01-20T08:57:44Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: docker://365dffd4aba30a1ee25a1a5314588a58129f50a1a34c6fe599d3be9e91c3a1ce
+    image: nginx:1.19
+    imageID: docker-pullable://nginx@sha256:10b8cc432d56da8b61b070f4c7d2543a9ed17c2b23010b43af434fd40e2ca4aa
+    lastState: {}
+    name: pod-nginx
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2021-01-20T08:57:46Z"
+  hostIP: 10.170.0.23
+  phase: Running
+  podIP: 10.60.9.49
+  podIPs:
+  - ip: 10.60.9.49
+  qosClass: BestEffort
+  startTime: "2021-01-20T08:57:44Z"
