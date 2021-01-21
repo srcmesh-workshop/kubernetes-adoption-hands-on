@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-pod
+  labels:
+    app: mysql-pod
+    context: docker-k8s-lab
+spec:
+  selector:
+    matchLabels:
+      app: mysql-pod
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mysql-pod
+        tier: frontend
+    spec:
+      containers:
+        - name: mysql
+          image: mysql
+          env:
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysecret
+                key: rootPassword
+          - name: MYSQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: mysecret
+                key: username
+          - name: MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysecret
+                key: password
+          - name: MYSQL_DATABASE
+            value: database
+          ports:
+            - name: mysql-port
+              containerPort: 3306
