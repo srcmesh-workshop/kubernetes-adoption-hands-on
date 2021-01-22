@@ -8,19 +8,6 @@ spec:
   selector:
     app: wordpress
   clusterIP: None
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: wordpress-pv-claim
-  labels:
-    app: wordpress
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
 #---
 #### same with mysql.yaml
 #apiVersion: v1
@@ -61,16 +48,10 @@ spec:
     - containerPort: 80
       name: worpress
       protocol: TCP
-    volumeMounts:
-    - name: wordpress-persistent-storage
-      mountPath: /var/www/html
     livenessProbe:
       httpGet:
         path: /
         port: 80
       failureThreshold: 3
       periodSeconds: 3
-  volumes:
-  - name: wordpress-persistent-storage
-    persistentVolumeClaim:
-      claimName: wordpress-pv-claim
+
