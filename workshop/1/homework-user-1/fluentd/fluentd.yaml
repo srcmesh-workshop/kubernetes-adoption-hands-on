@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd
+  namespace: default
+  labels:
+    app: fluentd
+spec:
+  selector:
+    matchLabels:
+      app: fluentd
+  template:
+    metadata:
+      labels:
+        app: fluentd
+    spec:
+      tolerations:
+      # this toleration is to have the daemonset runnable on master nodes
+      # remove it if your masters can't run pods
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: fluentd
+        image: fluent/fluentd
+        resources:
+          limits:
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        volumeMounts:
+        - name: fluentd-conf-volume
+          mountPath: /fluentd/etc
+        - name: nginx-log
+          mountPath: /logs
+          readOnly: true
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: fluentd-conf-volume
+        configMap:
+          name: fluentd-conf
+          items:
+          - key: fluent.conf
+            path: fluent.conf
+      - name: nginx-log
+        hostPath:
+          path: /var/logs
