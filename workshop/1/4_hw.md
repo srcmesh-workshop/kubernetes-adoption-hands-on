@@ -5,7 +5,7 @@
 Nginx Image: https://hub.docker.com/_/nginx
 MySQL Image: https://hub.docker.com/_/mysql
 Fluentd Image: https://hub.docker.com/_/fluentd
-MySQL Image: https://hub.docker.com/_/mysql
+Wordpress Image: https://hub.docker.com/_/wordpress
 
 * nginx
   * config path: `/etc/nginx/nginx.conf`
