@@ -140,7 +140,7 @@ $ kubectl delete pod <pod> --force --grace-period=0
 
 假設今天要跑一個除錯用的 pod 且離開後就刪除，可以加上 `--rm -it`
 
-```yaml
+```bash
 # 指令
 $ kubectl run <pod> --generator=run-pod/v1 --rm -it --image=<image>｀ -- <binary>
 
@@ -149,3 +149,17 @@ $ kubectl run foobar --generator=run-pod/v1 --rm -it --image=busybox -- sh
 ```
 
 進到該 pod 的 shell 後就可以執行 ping 或是 nslookup 相關指令
+
+# Misc
+
+* busybox
+
+```bash
+$ kuberun -i --tty busybox --image=busybox --restart=Never -- sh
+```
+
+* dnsutils
+
+```bash
+$ kubectl apply -f https://k8s.io/examples/admin/dns/dnsutils.yaml
+```
