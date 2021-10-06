@@ -40,6 +40,14 @@ sudo iptables -P FORWARD ACCEPT
 sudo kubeadm init --pod-network-cidr=10.244.0.0/16
 ```
 
+* Copy KUBECONFIG
+
+```
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+```
+
 * Apply CNI (container network interface) plugin `flannel`
 
 ```
@@ -50,5 +58,5 @@ kubectl create -f https://raw.githubusercontent.com/coreos/flannel/v0.12.0/Docum
 
 ```
 kubectl describe node
-kubectl taint nodes instance-1 node-role.kubernetes.io/master:NoSchedule-
+kubectl taint nodes <node-name> node-role.kubernetes.io/master:NoSchedule-
 ```
