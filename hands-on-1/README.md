@@ -155,7 +155,7 @@ $ kubectl run foobar --generator=run-pod/v1 --rm -it --image=busybox -- sh
 * busybox
 
 ```bash
-$ kuberun -i --tty busybox --image=busybox --restart=Never -- sh
+$ kubectl run -it busybox --image=busybox --restart=Never -- sh
 ```
 
 * dnsutils
