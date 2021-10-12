@@ -15,6 +15,11 @@ apt update
 # Install docker if you don't have it already.
 apt install -y docker.io runc
 apt install -y kubelet=1.18.17-00 kubeadm=1.18.17-00 kubectl=1.18.17-00 kubernetes-cni=0.8.7-00
+
+# Enable packet forwarding
+echo "net.ipv4.conf.all.forwarding=1" >> /etc/sysctl.conf
+# Launch kubelet at bootstrap
+systemctl enable kubelet
 ```
 
 Execute `install.sh`
