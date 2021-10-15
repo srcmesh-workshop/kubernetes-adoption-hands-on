@@ -1,19 +1,23 @@
 # Homework
 
-請利用 `nginx`、`wordpress`、`fluentd`、`MySQL` 建立一個在 Kubernetes 上運作的部落格系統
+請利用 `Nginx`、`Wordpress`、`Fluentd`、`MySQL` 建立一個在 Kubernetes 上運作的部落格系統
 
-Nginx Image: https://hub.docker.com/_/nginx
-MySQL Image: https://hub.docker.com/_/mysql
-Fluentd Image: https://hub.docker.com/_/fluentd
-Wordpress Image: https://hub.docker.com/_/wordpress
+![](./assets/hw.png)
 
-* nginx
-  * config path: `/etc/nginx/nginx.conf`
+## Container Images
 
-* fluentd:
-  * config path: `/fluentd/etc/fluent.conf`
+* Nginx Image: https://hub.docker.com/_/nginx
+  * 反向代理 (Reverse Proxy) 介紹: https://medium.com/starbugs/web-server-nginx-1-cf5188459108
+* MySQL Image: https://hub.docker.com/_/mysql
+* Fluentd Image: https://hub.docker.com/_/fluentd
+* Wordpress Image: https://hub.docker.com/_/wordpress
 
-* nginx.conf
+## Configuration
+
+### Nginx
+  * 設定檔放置位置: `/etc/nginx/nginx.conf`
+  * nginx.conf
+    * 必須修正設定檔內兩處 `<backend-wordpress-svc-name>` 以便指向正確的 Wordpress Service DNS
 ```
 user  nginx;
 worker_processes  1;
@@ -61,7 +65,9 @@ http {
 }
 ```
 
-* fluend.conf
+### fluentd:
+  * 設定檔放置位置: `/fluentd/etc/fluent.conf`
+  * fluend.conf
 ```
 <source>
   type tail
@@ -85,3 +91,14 @@ http {
   @type stdout
 </match>
 ```
+
+## 作業說明
+
+* 根據上面的示意圖撰寫對應的 YAML，可參考[前次作業的 YAML](https://gist.githubusercontent.com/life1347/b1b41384a3ddcc069dfadc40970ecd66/raw/a5c51c94db10cf6cffeffa13b1de3db10fedf707/gistfile1.txt) 作為藍本
+
+* Configmap 建立，可以參考[這邊教學](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/)的 `--from-file` 方式建立，並且以`檔案形式`掛載進對應的容器內
+  * 設定檔請直接參照上面範例即可
+
+* Nginx Pod 的 shared volume
+  * Nginx 會把運作時的 Log 寫入到 `/var/log/nginx/` 底下 (`access.log` 與 `error.log`)，你必須將 `emptyDir` type 的 volume 掛載進到 `/var/log/nginx/` 以便 Nginx container 寫入 log
+  * Fluentd 會讀取 `/logs` 底下所有 log，你必須將 `emptyDir` type 的 volume 掛載進到 `/logs` 以便 Fluentd 讀取 Nginx 寫入的 log
