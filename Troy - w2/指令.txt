@@ -1,0 +1,11 @@
+kubectl apply -f mysql-secret.yml
+kubectl apply -f mysql.yml
+kubectl apply -f mysql-svc.yml
+
+kubectl apply -f wordpress.yml
+kubectl apply -f wordpress-svc.yml
+
+kubectl create configmap nginx-conf --from-file=config/nginx.conf
+kubectl create configmap fluentd-conf --from-file=config/fluent.conf
+
+kubectl apply -f nginx.yaml
