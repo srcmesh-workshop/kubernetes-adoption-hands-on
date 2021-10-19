@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+spec:
+  containers:
+  - name: mysql
+    image: mysql:5.7.27
+    ports:
+    - name: mysql-port
+      containerPort: 3306
+    env:
+    - name: MYSQL_ROOT_PASSWORD
+      valueFrom:
+       secretKeyRef:
+         name: mysql-secret     
+         key: mysql_root_password     
+    - name: MYSQL_DB
+      valueFrom:
+       secretKeyRef:
+         name: mysql-secret
+         key: db_name
+    - name: MYSQL_USER
+      valueFrom:
+       secretKeyRef:
+         name: mysql-secret
+         key: user               
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 250m
+      limits:
+        memory: 512Mi
+        cpu: 500m         
+# 3306 port確認wordpress服務是否存活        
+    #livenessProbe:
+      #tcpSocket:
+        #port: 3306
+      #initialDelaySeconds: 100
+      #failureThreshold: 3
+      #periodSeconds: 3
+      #timeoutSeconds: 5
+  restartPolicy: Always

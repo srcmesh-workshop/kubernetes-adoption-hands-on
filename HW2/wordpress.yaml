@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Pod
+metadata:
+ name: wordpress
+ labels:
+  app: wordpress
+spec:
+  containers:
+  - name: wordpress
+    image: wordpress:latest
+    env:
+    - name: WORDPRESS_DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          key: mysql_root_password
+          name: mysql-secret
+    - name: WORDPRESS_DB_HOST
+      value: 127.0.0.1
+    - name: WORDPRESS_DB_NAME
+      valueFrom:
+        secretKeyRef:
+          name: mysql-secret
+          key: db_name
+    - name: WORDPRESS_DB_USER
+      valueFrom:
+        secretKeyRef:
+          name: mysql-secret
+          key: user        
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 250m
+      limits:
+        memory: 512Mi
+        cpu: 500m
+# 80 port確認wordpress服務是否存活        
+    #livenessProbe:
+      #tcpSocket:
+        #port: 80
+      #initialDelaySeconds: 100
+      #failureThreshold: 3
+      #periodSeconds: 3
+      #timeoutSeconds: 5
+# 確認mysql port是否存活      
+    #readinessProbe:
+      #tcpSocket:
+        #port: 3306
+      #initialDelaySeconds: 100
+      #periodSeconds: 3
+      #timeoutSeconds: 5
+      #failureThreshold: 3
