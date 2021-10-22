@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      name: nginx
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+          - mountPath: /var/log/nginx
+            name: share-logs
+          - mountPath: /etc/nginx/
+            name: nginx-conf
+            readOnly: true
+      - name: fluentd
+        image: fluentd:latest
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+          - mountPath: /logs
+            name: share-logs
+          - mountPath: /fluentd/etc
+            name: fluent-conf
+            readOnly: true
+      volumes:
+        - name: share-logs
+          emptyDir: {}
+        - configMap:
+            items:
+              - key: nginx.conf # key name in configmap
+                path: nginx.conf # file name in container
+            name: nginx-conf
+          name: nginx-conf
+        - configMap:
+            items:
+              - key: fluent.conf
+                path: fluent.conf
+            name: fluent-conf
+          name: fluent-conf
+
+
+
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   name: nginx
+#   labels:
+#     app: nginx
+# spec:
+#   containers:
+#     - name: nginx
+#       image: nginx:latest
+#       imagePullPolicy: IfNotPresent
+#       volumeMounts:
+#         - mountPath: /var/log/nginx
+#           name: share-logs
+#         - mountPath: /etc/nginx/
+#           name: nginx-conf
+#           readOnly: true
+#     - name: fluentd
+#       image: fluentd:latest
+#       imagePullPolicy: IfNotPresent
+#       volumeMounts:
+#         - mountPath: /logs
+#           name: share-logs
+#         - mountPath: /fluentd/etc
+#           name: fluent-conf
+#           readOnly: true
+#   volumes:
+#     - name: share-logs
+#       emptyDir: {}
+#     - configMap:
+#         items:
+#           - key: nginx.conf # key name in configmap
+#             path: nginx.conf # file name in container
+#         name: nginx-conf
+#       name: nginx-conf
+#     - configMap:
+#         items:
+#           - key: fluent.conf
+#             path: fluent.conf
+#         name: fluent-conf
+#       name: fluent-conf
