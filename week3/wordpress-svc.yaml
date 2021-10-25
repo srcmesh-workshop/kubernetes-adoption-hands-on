@@ -2,13 +2,10 @@ apiVersion: v1
 kind: Service
 metadata:
   name: wordpress-svc
-  labels:
-    svc: wordpress-svc
 spec:
   selector:
     app: wordpress
   ports:
-  - protocol: TCP
-    port: 80
+  - port: 80
     targetPort: 80
   type: ClusterIP

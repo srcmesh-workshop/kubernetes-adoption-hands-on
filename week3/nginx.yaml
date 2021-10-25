@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        volumeMounts:
+        - mountPath: /var/log/nginx
+          name: share-logs
+        - mountPath: /etc/nginx/
+          name: nginx-conf
+          readOnly: true
+      volumes:
+        - name: share-logs
+          hostPath:
+            path: /var/log/nginx
+            type: DirectoryOrCreate
+        - name: nginx-conf
+          hostPath:
+            path: /etc/nginx/
+            type: DirectoryOrCreate
+        - configMap:
+            items:
+              - key: nginx.conf # key name in configmap
+                path: nginx.conf # file name in container
+            name: nginx-conf
+          name: nginx-conf
+  terminationGracePeriodSeconds: 10
