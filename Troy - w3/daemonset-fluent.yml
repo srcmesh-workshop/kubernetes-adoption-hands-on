@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd
+  labels:
+      app: fluentd
+spec:
+  selector:
+    matchLabels:
+      app: fluentd
+  template:
+    metadata:
+      labels:
+        app: fluentd
+    spec:
+      containers:
+        - name: fluentd
+          image: fluentd:latest
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /var/log/nginx
+              name: share-logs
+            - mountPath: /fluentd/etc
+              name: fluent-conf
+              readOnly: true
+      volumes:
+        - name: share-logs
+          hostPath:
+            path: /var/log/nginx
+            type: DirectoryOrCreate
+        - configMap:
+            items:
+              - key: fluent.conf
+                path: fluent.conf
+            name: fluent-conf
+          name: fluent-conf
