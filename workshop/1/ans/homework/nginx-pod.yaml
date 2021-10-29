@@ -15,10 +15,10 @@ spec:
     ports:
       - containerPort: 80
     volumeMounts:
-        - name: nginx-conf-volume
-          mountPath: /etc/nginx/conf.d
-        - name: log-volume
-          mountPath: /var/log/nginx
+    - name: nginx-conf-volume
+      mountPath: /etc/nginx
+    - name: log-volume
+      mountPath: /var/log/nginx
   - name: fluentd
     image: fluentd
     resources:
@@ -29,7 +29,7 @@ spec:
     - containerPort: 24224
     volumeMounts:
     - name: fluentd-conf-volume
-      mountPath: /etc/fluentd/conf.d
+      mountPath: /etc/fluentd
     - name: log-volume
       mountPath: /logs
   volumes:
@@ -37,8 +37,8 @@ spec:
     configMap:
       name: nginx-conf
       items:
-      - key: nginx.conf
-        path: nginx.conf
+      - key: nginx.conf  # key name in configmap
+        path: nginx.conf  # file name in container
   - name: fluentd-conf-volume
     configMap:
       name: fluentd-conf

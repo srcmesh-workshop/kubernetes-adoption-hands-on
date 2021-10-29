@@ -10,7 +10,7 @@ spec:
     image: mysql:5.7
     resources:
       limits:
-        memory: "128Mi"
+        memory: "512Mi"
         cpu: "500m"
     ports:
       - name: mysql-port
