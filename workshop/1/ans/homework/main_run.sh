@@ -1,11 +1,8 @@
-kubectl delete pod mysql-server
-kubectl delete pod wordpress
-kubectl delete svc mysql-server-service
-kubectl delete svc wordpress-service
-kubectl delete deployment nginx-app
-kubectl delete pvc mysql-pvc-claim
-kubectl delete pv mysql-pv-volume
-kubectl delete secret mysql-secret
+#!/usr/bin/env bash
+
+for f in ./*.yaml; do
+  kubectl delete -f $f;
+done
 kubectl delete configmap fluentd-conf
 kubectl delete configmap nginx-conf
 
