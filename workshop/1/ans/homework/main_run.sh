@@ -17,5 +17,6 @@ kubectl create -f mysql-service.yaml
 kubectl create -f wordpress-pod.yaml
 kubectl create -f wordpress-service.yaml
 
-# create nginx, fluentd deployment
-kubectl create -f nginx-deploy.yaml
+# create nginx app
+kubectl create -f nginx-pod.yaml
+kubectl create -f nginx-service.yaml

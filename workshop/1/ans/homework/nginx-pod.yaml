@@ -47,4 +47,3 @@ spec:
         path: fluentd.conf
   - name: log-volume
     emptyDir: {}
-  
