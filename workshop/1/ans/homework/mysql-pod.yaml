@@ -21,6 +21,21 @@ spec:
           secretKeyRef:
             name: mysql-secret
             key: db-root-password
+      - name: MYSQL_USER
+        valueFrom:
+          secretKeyRef:
+            name: mysql-secret
+            key: user
+      - name: MYSQL_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: mysql-secret
+            key: user-password
+      - name: MYSQL_DATABASE
+        valueFrom:
+          configMapKeyRef:
+            key: db_name
+            name: mysql-cfgmap
     volumeMounts:
       - mountPath: "/var/lib/mysql"
         name: mysql-server-storage

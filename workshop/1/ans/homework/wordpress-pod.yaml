@@ -20,6 +20,16 @@ spec:
         valueFrom:
           secretKeyRef:
             name: mysql-secret
-            key: db-root-password
+            key: user-password
+      - name: WORDPRESS_DB_USER
+        valueFrom:
+          secretKeyRef:
+            name: mysql-secret
+            key: user
+      - name: WORDPRESS_DB_NAME
+        valueFrom:
+          configMapKeyRef:
+            name: mysql-cfgmap
+            key: db_name
       - name: WORDPRESS_DB_HOST
         value: mysql-server-service
