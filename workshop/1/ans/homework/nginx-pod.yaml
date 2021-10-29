@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-app
+  labels:
+    name: nginx-app
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    resources:
+      limits:
+        memory: "256Mi"
+        cpu: "500m"
+    ports:
+      - containerPort: 80
+    volumeMounts:
+        - name: nginx-conf-volume
+          mountPath: /etc/nginx/conf.d
+        - name: log-volume
+          mountPath: /var/log/nginx
+  - name: fluentd
+    image: fluentd
+    resources:
+      limits:
+        memory: "256Mi"
+        cpu: "500m"
+    ports:
+    - containerPort: 24224
+    volumeMounts:
+    - name: fluentd-conf-volume
+      mountPath: /etc/fluentd/conf.d
+    - name: log-volume
+      mountPath: /logs
+  volumes:
+  - name: nginx-conf-volume
+    configMap:
+      name: nginx-conf
+      items:
+      - key: nginx.conf
+        path: nginx.conf
+  - name: fluentd-conf-volume
+    configMap:
+      name: fluentd-conf
+      items:
+      - key: fluentd.conf
+        path: fluentd.conf
+  - name: log-volume
+    emptyDir: {}
+  
