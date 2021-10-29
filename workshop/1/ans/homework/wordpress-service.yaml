@@ -6,8 +6,8 @@ spec:
   selector:
     app: wordpress
   ports:
-  - port: 3000
+  - port: 80
     nodePort: 30300
     protocol: TCP
-    targetPort: wordpress-port
+    targetPort: 80
   type: NodePort

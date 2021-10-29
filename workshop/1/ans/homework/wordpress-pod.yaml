@@ -14,7 +14,7 @@ spec:
         cpu: "500m"
     ports:
       - name: wordpress-port
-        containerPort: 8000
+        containerPort: 80
     env:
       - name: WORDPRESS_DB_PASSWORD
         valueFrom:
