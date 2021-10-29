@@ -16,7 +16,7 @@ spec:
       - containerPort: 80
     volumeMounts:
     - name: nginx-conf-volume
-      mountPath: /etc/nginx
+      mountPath: /etc/nginx/sites-enabled
     - name: log-volume
       mountPath: /var/log/nginx
   - name: fluentd
@@ -29,7 +29,7 @@ spec:
     - containerPort: 24224
     volumeMounts:
     - name: fluentd-conf-volume
-      mountPath: /etc/fluentd
+      mountPath: /etc/fluentd/conf.d
     - name: log-volume
       mountPath: /logs
   volumes:
