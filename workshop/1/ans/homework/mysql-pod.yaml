@@ -36,10 +36,10 @@ spec:
           configMapKeyRef:
             key: db_name
             name: mysql-cfgmap
-    volumeMounts:
-      - mountPath: "/var/lib/mysql"
-        name: mysql-server-storage
-  volumes:
-    - name: mysql-server-storage
-      persistentVolumeClaim:
-        claimName: mysql-pvc-claim
+  #   volumeMounts:
+  #     - mountPath: "/var/lib/mysql"
+  #       name: mysql-server-storage
+  # volumes:
+  #   - name: mysql-server-storage
+  #     persistentVolumeClaim:
+  #       claimName: mysql-pvc-claim
