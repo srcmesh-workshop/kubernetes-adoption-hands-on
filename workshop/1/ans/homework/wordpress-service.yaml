@@ -4,7 +4,7 @@ metadata:
   name: wordpress-service
 spec:
   selector:
-    app: wordpress
+    name: wordpress
   ports:
   - port: 80
     nodePort: 30300

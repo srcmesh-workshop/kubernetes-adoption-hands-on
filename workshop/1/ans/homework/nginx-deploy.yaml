@@ -9,7 +9,7 @@ spec:
   template:
     metadata:
       labels:
-        app: nginx-deployment
+        name: nginx-deployment
     spec:
       containers:
       - name: nginx
