@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: test-6
+  labels:
+    app: nginx
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+      namespace: test-6
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: share-logs
+              mountPath: /var/log/nginx
+            - name: config
+              mountPath: /etc/nginx
+              readOnly: true
+      volumes:
+        - name: share-logs
+          hostPath:
+            path: /mnt/test-6
+            type: DirectoryOrCreate
+        - name: config
+          configMap:
+            name: nginx-conf
+            items:
+              - key: nginx.conf # key name in configmap
+                path: nginx.conf # file name in container

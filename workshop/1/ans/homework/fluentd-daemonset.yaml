@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd
+  namespace: test-6
+  labels:
+    app: fluentd
+spec:
+  selector:
+    matchLabels:
+      app: fluentd
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  minReadySeconds: 5
+  template:
+    metadata:
+      name: fluentd
+      namespace: test-6
+      labels:
+        app: fluentd
+    spec:
+      containers:
+        - name: fluentd
+          image: fluentd:latest
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: config
+              mountPath: /fluentd/etc
+              readOnly: true
+            - name: share-logs
+              mountPath: /var/logs
+      volumes:
+        - name: share-logs
+          hostPath:
+            path: /mnt/test-6
+            type: DirectoryOrCreate
+        - name: config
+          configMap:
+            name: fluent-conf
+            items:
+              - key: fluent.conf
+                path: fluent.conf
