@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd-elasticsearch
+  labels:
+    app: fluentd-elasticsearch
+spec:
+  selector:
+    matchLabels:
+      app: fluentd-elasticsearch
+  template:
+    metadata:
+      name: fluentd-elasticsearch
+      labels:
+        app: fluentd-elasticsearch
+    spec:
+      containers:
+        - name: fluentd-elasticsearch
+          image: fluentd:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: 300m
+              memory: 200Mi
+            requests:
+              cpu: 200m
+              memory: 100Mi
+          volumeMounts:
+            - mountPath: /logs
+              name: share-logs
+            - mountPath: /fluentd/etc
+              name: fluent-conf
+              readOnly: true
+      volumes:
+        - name: share-logs
+          hostPath:
+            path: /var/log/nginx
+            type: DirectoryOrCreate
+        - configMap:
+            items:
+              - key: fluent.conf
+                path: fluent.conf
+            name: fluent-conf
+          name: fluent-conf
