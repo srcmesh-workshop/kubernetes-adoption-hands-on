@@ -25,7 +25,7 @@ spec:
         volumeMounts:
         - name: share-logs
           mountPath: /var/log/nginx
-        - name: fluent-conf
+        - name: fluentd-conf
           mountPath: /etc/fluentd/conf.d
       volumes:
         - name: share-logs
@@ -33,7 +33,7 @@ spec:
             path: /var/log/nginx
         - configMap:
             items:
-              - key: fluent.conf
-                path: fluent.conf
-            name: fluent-conf
-          name: fluent-conf
+              - key: fluentd.conf
+                path: fluentd.conf
+            name: fluentd-conf
+          name: fluentd-conf
