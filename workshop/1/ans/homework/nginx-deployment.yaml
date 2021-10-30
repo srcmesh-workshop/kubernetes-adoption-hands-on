@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /var/log/nginx
+          name: share-logs
+        - mountPath: /etc/nginx/
+          name: nginx-conf
+          readOnly: true
+      volumes:
+        - name: share-logs
+          hostPath:
+            path: /var/log/nginx
+            type: DirectoryOrCreate
+        - configMap:
+            items:
+              - key: nginx.conf # key name in configmap
+                path: nginx.conf # file name in container
+            name: nginx-conf
+          name: nginx-conf

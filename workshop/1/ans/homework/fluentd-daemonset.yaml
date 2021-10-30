@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd
+  labels:
+    k8s-app: fluentd-logging
+spec:
+  selector:
+    matchLabels:
+      name: fluentd
+  template:
+    metadata:
+      labels:
+        name: fluentd
+    spec:
+      containers:
+      - name: fluentd
+        image: fluentd:latest
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        volumeMounts:
+        - name: share-logs
+          mountPath: /var/log/nginx
+        - name: fluent-conf
+          mountPath: /etc/fluentd/conf.d
+      volumes:
+        - name: share-logs
+          hostPath:
+            path: /var/log/nginx
+        - configMap:
+            items:
+              - key: fluent.conf
+                path: fluent.conf
+            name: fluent-conf
+          name: fluent-conf
