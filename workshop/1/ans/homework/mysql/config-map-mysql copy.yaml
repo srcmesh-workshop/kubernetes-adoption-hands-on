@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-cfgmap
+data:
+  db_host: mysql-svc
+  db_name: Test_1234
