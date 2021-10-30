@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wp
+spec:
+  selector:
+    matchLabels:
+      app: wp
+  template:
+    metadata:
+      labels:
+        app: wp
+    spec:
+      containers:
+        - name: wp
+          image: wordpress
+          env:
+            - name: WORDPRESS_DB_HOST
+              value: mysql-svc
+            - name: WORDPRESS_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: username
+            - name: WORDPRESS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: password
+            - name: WORDPRESS_DB_NAME
+              value: dev
+          ports:
+            - containerPort: 80
