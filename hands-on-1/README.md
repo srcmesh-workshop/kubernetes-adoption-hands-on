@@ -7,6 +7,20 @@
 * Docker Desktop: https://www.docker.com/products/docker-desktop
 * Minikube: https://kubernetes.io/docs/tasks/tools/install-minikube/ 
 
+# 課程操作環境
+
+設定環境變數
+```bash
+echo "export KUBECONFIG=/etc/kubernetes/cfg/config" >> ~/.bashrc
+echo "export GOOGLE_APPLICATION_CREDENTIALS=/etc/kubernetes/cfg/gsa-key.json" >> ~/.bashrc
+source ~/.bashrc
+```
+
+驗證是否成功
+```bash
+kubectl version
+```
+
 # Namespace
 
 ## 建立專屬 namespace
