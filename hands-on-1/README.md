@@ -35,14 +35,20 @@ $ kubectl create namespace <ns>
 
 ```bash
 # 指令
-$ kubectl config set-context <context-name>
-$ kubectl config use-context <context-name>
 $ kubectl config set-context --current --namespace=<ns>
 
 # 範例
-$ kubectl config set-context default
-$ kubectl config use-context default
 $ kubectl config set-context --current --namespace=user-0
+```
+
+```
+contexts:
+- context:
+    cluster: <cluster>
+    namespace: <ns>
+    user: kubernetes-adoption-token
+  name: kubernetes-adoption-context
+current-context: kubernetes-adoption-context
 ```
 
 ## 確認是否已經切換成功
