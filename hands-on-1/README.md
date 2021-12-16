@@ -11,7 +11,7 @@
 
 設定環境變數
 ```bash
-echo "export KUBECONFIG=/etc/kubernetes/cfg/config" >> ~/.bashrc
+echo "export KUBECONFIG=~/.kube/config" >> ~/.bashrc
 echo "export GOOGLE_APPLICATION_CREDENTIALS=/etc/kubernetes/cfg/gsa-key.json" >> ~/.bashrc
 source ~/.bashrc
 ```
