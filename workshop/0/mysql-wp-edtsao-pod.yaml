@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql-wp-edtsao-pod
+  #想說labels的部份可以分前段、後端之類的
+  labels:
+    architecture: frontend
+spec:
+  containers:
+  - image: mysql:8.0.27
+    name: mysql-container
+    env:
+    - name: MYSQL_ROOT_PASSWORD
+      value: "root-pw"
+    - name: MYSQL_USER
+      value: "edtsao"
+    - name: MYSQL_PASSWORD
+      value: "edtsao-pw"
+    - name: MYSQL_DATABASE
+      value: "wordpress-db"
+    resources:
+      #下限設定一個基礎的值，上限就先簡單抓個兩倍
+      requests:
+        memory: "500Mi"
+        cpu: "250m"
+      limits:
+        memory: "1000Mi"
+        cpu: "500m"
+    ports:
+      - containerPort: 3306
+    #livenessProbe檢測自身container是否存活
+    livenessProbe:
+      tcpSocket:
+        port: 3306
+      #剛開始啟動拉久一點(30s)，每次檢測的間隔跟timeout時間也拉長一點(10*3s)
+      #這麼充裕的時間如果過就過了，所以successThreshold設定1
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 3
+      successThreshold: 1
+      failureThreshold: 3
+  - image: wordpress:5.8.2-apache
+    name: wordpress-container
+    env:
+    - name: WORDPRESS_DB_HOST
+      value: "127.0.0.1:3306"
+    - name: WORDPRESS_DB_USER
+      value: "edtsao"
+    - name: WORDPRESS_DB_PASSWORD
+      value: "edtsao-pw"
+    - name: WORDPRESS_DB_NAME
+      value: "wordpress-db"
+    resources:
+      requests:
+        memory: "250Mi"
+        cpu: "250m"
+      limits:
+        memory: "500Mi"
+        cpu: "500m"
+    ports:
+      - containerPort: 80
+    #livenessProbe檢測自身container是否存活
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+        scheme: HTTP
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 3
+      successThreshold: 1
+      failureThreshold: 3
+    #readinessProbe測試mysql-container(127.0.0.1:3306)是否能接收流量
+    readinessProbe:
+      tcpSocket:
+        port: 3306
+        host: 127.0.0.1
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 3
+      successThreshold: 1
+      failureThreshold: 3
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+  #限定有外網的Node
+  nodeSelector:
+    netconnection: external
