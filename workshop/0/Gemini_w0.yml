@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: wp-website
+  labels:
+    app: wp-website
+spec:
+  containers:
+  # DB
+  - image: mysql:5.7
+    name: mysql
+    env:
+    - name: MYSQL_ROOT_PASSWORD
+      value: "wp_root_password"
+    - name: MYSQL_DATABASE
+      value: "wp_db"
+    - name: MYSQL_USER
+      value: "wp_user"
+    - name: MYSQL_PASSWORD
+      value: "wp_password"
+    ports:
+    - containerPort: 3306
+      name: mysql-port
+    resources:
+      requests:
+        memory: "50Mi"
+        cpu: "100m"
+      limits:
+        memory: "300Mi"
+        cpu: "500m"
+    # 150MB 30sec
+    # 部落格寬鬆點，3分鐘內發現即可
+    # Worst case = 30 + 2*30 + 1*3 = 93sec
+    # Best case = 2*30 = 60sec
+    livenessProbe:
+      exec:
+        command: ["mysqladmin", "ping"]
+      initialDelaySeconds: 30
+      periodSeconds: 30
+      timeoutSeconds: 3
+      successThreshold: 1
+      failureThreshold: 2
+    # ERROR: Kubernetes Readiness probe failed: dial tcp 10.244.0.10:5000: connect: connection refused
+    # readinessProbe:
+    #   exec:
+    #     command: ["mysql", "-h", "127.0.0.1", "-e", "SELECT 1"]
+    #   initialDelaySeconds: 5
+    #   periodSeconds: 2
+    #   timeoutSeconds: 1
+  # WORDPRESS
+  - image: wordpress:5.8.2-apache
+    name: wordpress
+    env:
+    - name: WORDPRESS_DB_HOST
+      value: "127.0.0.1:3306"
+    - name: WORDPRESS_DB_USER
+      value: "wp_user"
+    - name: WORDPRESS_DB_PASSWORD
+      value: "wp_password"
+    - name: WORDPRESS_DB_NAME
+      value: "wp_db"
+    ports:
+    - containerPort: 80
+      name: wordpress-port
+    resources:
+      requests:
+        memory: "200Mi"
+        cpu: "100m"
+      limits:
+        memory: "500Mi"
+        cpu: "500m"
+    # 200MB
+    # 部落格寬鬆點，3分鐘內發現即可
+    # Worst case = 40 + 2*30 + 1*3 = 103sec
+    # Best case = 2*30 = 60sec
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+        scheme: HTTP
+      initialDelaySeconds: 40
+      periodSeconds: 30
+      timeoutSeconds: 3
+      successThreshold: 1
+      failureThreshold: 2
+    readinessProbe:
+      tcpSocket:
+        port: 3306
+      initialDelaySeconds: 40
+      periodSeconds: 30
+      timeoutSeconds: 3
+      successThreshold: 1
+      failureThreshold: 2
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+# kubectl port-forward pod/wp-website 8001:80 --address='0.0.0.0'
