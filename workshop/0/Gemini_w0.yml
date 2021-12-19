@@ -41,12 +41,16 @@ spec:
       successThreshold: 1
       failureThreshold: 2
     # ERROR: Kubernetes Readiness probe failed: dial tcp 10.244.0.10:5000: connect: connection refused
-    # readinessProbe:
-    #   exec:
-    #     command: ["mysql", "-h", "127.0.0.1", "-e", "SELECT 1"]
-    #   initialDelaySeconds: 5
-    #   periodSeconds: 2
-    #   timeoutSeconds: 1
+    readinessProbe:
+      exec:
+        command:
+        - /bin/sh
+        - "-c"
+        - MYSQL_PWD="${MYSQL_ROOT_PASSWORD}"
+        - mysql -h 127.0.0.1 -u root -e "SELECT 1"
+      initialDelaySeconds: 10
+      periodSeconds: 2
+      timeoutSeconds: 1
   # WORDPRESS
   - image: wordpress:5.8.2-apache
     name: wordpress
@@ -74,11 +78,10 @@ spec:
     # Worst case = 40 + 2*30 + 1*3 = 103sec
     # Best case = 2*30 = 60sec
     livenessProbe:
-      httpGet:
-        path: /
+      # httpGet failed, connect refused
+      tcpSocket:
         port: 80
-        scheme: HTTP
-      initialDelaySeconds: 40
+      initialDelaySeconds: 30
       periodSeconds: 30
       timeoutSeconds: 3
       successThreshold: 1
@@ -86,8 +89,8 @@ spec:
     readinessProbe:
       tcpSocket:
         port: 3306
-      initialDelaySeconds: 40
-      periodSeconds: 30
+      initialDelaySeconds: 30
+      periodSeconds: 10
       timeoutSeconds: 3
       successThreshold: 1
       failureThreshold: 2
