@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: wordpress-ccstw
+    wordpress: 5.8.2-apache
+    mysql: 8.0.27
+  name: wordpress-ccstw
+spec:
+  containers:
+  - image: wordpress:5.8.2-apache
+    name: wordpress
+    readinessProbe: #check Mysql if mysql lost connection wp stop receving data
+      tcpSocket:
+        port: 3306
+      periodSeconds: 30
+      timeoutSeconds: 10
+      initialDelaySeconds: 60
+      failureThreshold: 5
+    livenessProbe: #keep check wp alive or not
+      httpGet:
+        path: /
+        port: 80
+        scheme: HTTP
+      periodSeconds: 30
+      timeoutSeconds: 10
+      initialDelaySeconds: 60
+      failureThreshold: 5
+    resources:
+      requests: 
+        memory: "64Mi"
+        cpu: "100m"
+      limits:
+        memory: "128Mi"
+        cpu: "100m"
+    env:
+      - name: WORDPRESS_DB_HOST
+        value: "127.0.0.1:3306"
+      - name: WORDPRESS_DB_USER
+        value: "dlll"
+      - name: WORDPRESS_DB_PASSWORD
+        value: "12345"
+      - name: WORDPRESS_DB_NAME
+        value: "wordpress"  
+  - image: mysql:8.0.27
+    name: db
+    env:
+      - name: MYSQL_ROOT_PASSWORD
+        value: "la2391"
+      - name: MYSQL_DATABASE
+        value: "wordpress"
+      - name: MYSQL_USER
+        value: "dlll"
+      - name: MYSQL_PASSWORD
+        value: "12345"
+    livenessProbe: #keep check mysql alive or not
+      tcpSocket:
+        port: 3306
+      periodSeconds: 30
+      timeoutSeconds: 10
+      initialDelaySeconds: 60
+      failureThreshold: 5
+    resources:
+      requests: 
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "100m"
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+#不知道是不是硬體問題(用筆電跑) 加入probe後啟動時間要跑一分鐘以上 initialDelaySeconds就設60秒
+#硬體的關係resources設定就不設太大了
