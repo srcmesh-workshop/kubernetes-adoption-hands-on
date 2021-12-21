@@ -54,7 +54,7 @@ spec:
           value: Awesome
       initialDelaySeconds: 300
       periodSeconds: 10
-      timeoutSeconds: 3
+      timeoutSeconds: 15
       successThreshold: 1
       failureThreshold: 3
     readinessProbe:
