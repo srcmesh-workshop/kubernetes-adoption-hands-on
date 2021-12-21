@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    # 能夠描述該 Pod 的 labels
+    run: wordpress-mysql
+    app: wordpress-mysql
+    workshop: srcmesh
+  name: wordpress-mysql
+spec:
+  containers:
+  - image: mysql:8.0.27
+    name: db
+    env:
+    - name: MYSQL_ROOT_PASSWORD
+      value: "password"
+    - name: MYSQL_DATABASE
+      value: "exampledb"
+    - name: MYSQL_USER
+      value: "exampleuser"
+    - name: MYSQL_PASSWORD
+      value: "examplepass"
+    # resource requests/limits
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "0.2"
+      limits:
+        memory: "1024Mi"
+        cpu: "0.7"
+    # 當容器檢測失敗後要能被自動 restart
+    livenessProbe:
+      tcpSocket:
+        port: 3306
+      initialDelaySeconds: 30
+      periodSeconds: 60
+  - name: wp
+    image: wordpress:5.8.2-apache
+    env: 
+    - name: WORDPRESS_DB_HOST
+      value: "127.0.0.1:3306"
+    - name: WORDPRESS_DB_USER
+      value: "exampleuser"
+    - name: WORDPRESS_DB_PASSWORD
+      value: "examplepass"
+    - name: WORDPRESS_DB_NAME
+      value: "exampledb"
+    # resource requests/limits
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "0.2"
+      limits:
+        memory: "1024Mi"
+        cpu: "0.7"
+    # 當容器檢測失敗後要能被自動 restart
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 60
+      periodSeconds: 600
+    # 當 MySQL 失效時 wordpress 要能停止接收新請求
+    readinessProbe:
+      tcpSocket:
+        port: 3306
+      initialDelaySeconds: 30
+      periodSeconds: 60
+  dnsPolicy: ClusterFirst
+  # 適當的 restartPolicy
+  restartPolicy: Always
+status: {}
