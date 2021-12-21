@@ -1,0 +1,82 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: abcdefg
+    feeling: ThisWorldIsUnfirendly
+  name: abcdefg
+spec:
+  containers:
+  - image: mysql:8.0.27
+    name: mysql
+    env:
+      - name: MYSQL_ROOT_PASSWORD
+        value: 'root-password'
+      - name: MYSQL_DATABASE
+        value: 'wp-database'
+      - name: MYSQL_USER
+        value: 'wp-user'
+      - name: MYSQL_PASSWORD
+        value: 'wp-password'
+    livenessProbe:
+      tcpSocket:
+        port: 3306
+      initialDelaySeconds: 60
+      periodSeconds: 15
+      timeoutSeconds: 15
+      successThreshold: 1
+      failureThreshold: 3
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+  - image: wordpress:5.8.2-apache
+    name: wordpress
+    env:
+      - name: WORDPRESS_DB_HOST
+        value: '127.0.0.1:3306'
+      - name: WORDPRESS_DB_USER
+        value: 'wp-user'     
+      - name: WORDPRESS_DB_PASSWORD
+        value: 'wp-password'
+      - name: WORDPRESS_DB_NAME
+        value: 'wp-database'
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+        httpHeaders:
+        - name: Custom-Header
+          value: Awesome
+      initialDelaySeconds: 300
+      periodSeconds: 10
+      timeoutSeconds: 3
+      successThreshold: 1
+      failureThreshold: 3
+    readinessProbe:
+      tcpSocket:
+        port: 3306
+      initialDelaySeconds: 60
+      periodSeconds: 15
+      timeoutSeconds: 15
+      successThreshold: 1
+      failureThreshold: 3
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+  dnsPolicy: ClusterFirst
+  restartPolicy: OnFailure
+status: {}
+# 所有探針加上 host: 127.0.0.1都會掛掉
+# timeout設10秒內也會掛掉
+# initial不能設太短機器開不起來
+# 太苦了
+# 我討厭這個不友善的世界 
