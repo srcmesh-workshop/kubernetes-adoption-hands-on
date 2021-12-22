@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: wp
+  name: wp
+spec:
+  containers:
+  # mysql 容器及wordpress資料庫
+  - name: mysql
+    image: mysql:8.0
+    env:
+    - name: MYSQL_ROOT_PASSWORD
+      value: 'root_password'
+    - name: MYSQL_DATABASE
+      value: 'wp_db'
+    - name: MYSQL_USER
+      value: 'wp'
+    - name: MYSQL_PASSWORD
+      value: 'db_password'
+    resources: 
+      requests:
+        memory: '64Mi'
+        cpu: '250m'
+      limits:
+        memory: '1024Mi'
+        cpu: '500m'
+    # 檢測容器失敗時自動重啟
+    livenessProbe:
+      tcpSocket:
+        port: 3306
+  # wordpress容器
+  - name: wordpress
+    image: wordpress:5.8.2-apache
+    env:
+    - name: WORDPRESS_DB_HOST
+      value: '127.0.0.1:3306'
+    - name: WORDPRESS_DB_USER
+      value: 'wp'
+    - name: WORDPRESS_DB_PASSWORD
+      value: 'db_password'
+    - name: WORDPRESS_DB_NAME
+      value: 'wp_db'
+    resources: 
+      requests:
+        memory: '64Mi'
+        cpu: '250m'
+      limits:
+        memory: '1024Mi'
+        cpu: '500m'
+    # 檢測容器失敗時自動重啟
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+        scheme: HTTP
+    # mysql失效時 wp 停止接收新請求
+    readinessProbe:
+      tcpSocket:
+        port: 3306
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
