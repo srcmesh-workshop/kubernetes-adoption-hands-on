@@ -4,10 +4,10 @@ metadata:
   creationTimestamp: null
   labels:
     # 能夠描述該 Pod 的 labels
-    run: wordpress-mysql
-    app: wordpress-mysql
+    run: wp
+    app: wp
     workshop: srcmesh
-  name: wordpress-mysql
+  name: wp
 spec:
   containers:
   - image: mysql:8.0.27
