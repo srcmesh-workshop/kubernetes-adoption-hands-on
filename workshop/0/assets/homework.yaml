@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: webwork
+  name: webwork
+spec:
+  containers:
+  - name: db
+    image: mysql:5.7
+    env:
+    - name: MYSQL_ROOT_PASSWORD
+      value: "password"
+    - name: MYSQL_DATABASE
+      value: "test"
+    - name: MYSQL_USER
+      value: "user"
+    - name: MYSQL_PASSWORD
+      value: "password"
+    startupProbe:
+      tcpSocket:
+        port: 3306
+      initialDelaySeconds: 5
+      failureThreshold: 60
+      timeoutSeconds: 3
+      periodSeconds: 10
+    livenessProbe:
+      tcpSocket:
+        port: 3306
+      failureThreshold: 3
+      periodSeconds: 10
+      timeoutSeconds: 3
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "1024Mi"
+        cpu: "500m"
+  - name: wp
+    image: wordpress:5.8.2-apache
+    env:
+    - name: WORDPRESS_DB_HOST
+      value: 127.0.0.1:3306
+    - name: WORDPRESS_DB_USER
+      value: "user"
+    - name: WORDPRESS_DB_PASSWORD
+      value: "password"
+    - name: WORDPRESS_DB_NAME
+      value: "test"
+    livenessProbe:
+      tcpSocket:
+        port: wp
+      failureThreshold: 3
+      periodSeconds: 10
+      timeoutSeconds: 3
+    readinessProbe:
+      tcpSocket:
+        port: 3306
+      periodSeconds: 3
+      timeoutSeconds: 3
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "1024Mi"
+        cpu: "500m"
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
