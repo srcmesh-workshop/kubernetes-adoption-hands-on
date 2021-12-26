@@ -40,7 +40,6 @@ spec:
       timeoutSeconds: 3
       successThreshold: 1
       failureThreshold: 2
-    # ERROR: Kubernetes Readiness probe failed: dial tcp 10.244.0.10:5000: connect: connection refused
     readinessProbe:
       exec:
         command:

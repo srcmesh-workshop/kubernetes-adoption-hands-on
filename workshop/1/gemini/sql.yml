@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secret
+type: Opaque
+stringData:
+  username: wp-user 
+  password: wp-pwd
+  rootpassword: root-pwd
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-cfm
+data:
+  database: gemini_sql
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+spec:
+  serviceName: db-svc
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db-deployment
+      version: 5.7
+  template:
+    metadata:
+      labels:
+        app: db-deployment
+        version: 5.7
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:5.7
+        ports:
+        - name: mysql-port
+          containerPort: 3306
+          protocol: TCP
+        env:
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: username
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: password
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: rootpassword
+        - name: MYSQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-cfm
+              key: database
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - "-c"
+            - |
+              mysqladmin ping -u$MYSQL_USER -p$MYSQL_PASSWORD
+          initialDelaySeconds: 70
+          periodSeconds: 30
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - "-c"
+            - mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -h 127.0.0.1 -e 'SELECT 1'
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-svc
+spec:
+  clusterIP: None
+  ports:
+  - port: 3306
+    protocol: TCP
+    targetPort: mysql-port
+  selector:
+    app: db-deployment

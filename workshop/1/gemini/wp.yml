@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: wp-secret
+type: Opaque
+stringData:
+  username: wp-user
+  password: wp-pwd
+  rootpassword: root-pwd
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wp-cfm
+data:
+  host: db-svc
+  name: gemini_sql
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: wp-deployment
+      version: 5.8.2
+  template:
+    metadata:
+      labels:
+        app: wp-deployment
+        version: 5.8.2
+    spec:
+      containers:
+      - name: wp
+        image: wordpress:5.8.2-apache
+        ports:
+        - name: wp-port
+          containerPort: 80
+        env:
+        - name: WORDPRESS_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: wp-secret
+              key: username
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wp-secret
+              key: password
+        - name: WORDPRESS_DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: wp-cfm
+              key: host
+        - name: WORDPRESS_DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: wp-cfm
+              key: name
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wp-svc
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: wp-port
+  selector:
+    app: wp-deployment
