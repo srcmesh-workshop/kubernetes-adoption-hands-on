@@ -1,0 +1,204 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secret
+type: Opaque
+data:
+  #echo -n 'f121476536' | base64 >> a
+  #一開始少了-n參數，結果base64編碼字串後會自動加一個換行符號，造成mysql container一直報錯起不來，卡超久
+  env-mysql-root-password: cm9vdC1wdw==
+  #root-pw
+  env-mysql-user: ZjEyMTQ3NjUzNg==
+  #f121476536
+  env-mysql-password: ZjEyMTQ3NjUzNi1wdw==
+  #f121476536-pw
+  env-mysql-database: d29yZHByZXNzLWRi
+  #wordpress-db
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql-pod
+  labels:
+    app.kubernetes.io/instance: mysql
+    app.kubernetes.io/created-by: f121476536
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: blog-system
+spec:
+  containers:
+  - image: mysql:8.0.27
+    name: mysql-container
+    ports:
+      - containerPort: 3306
+    env:
+      - name: MYSQL_ROOT_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: mysql-secret
+            key: env-mysql-root-password
+      - name: MYSQL_USER
+        valueFrom:
+          secretKeyRef:
+            name: mysql-secret
+            key: env-mysql-user
+      - name: MYSQL_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: mysql-secret
+            key: env-mysql-password
+      - name: MYSQL_DATABASE
+        valueFrom:
+          secretKeyRef:
+            name: mysql-secret
+            key: env-mysql-database
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+  #限定有外網的Node
+  nodeSelector:
+    netconnection: external
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/instance: mysql
+    app.kubernetes.io/created-by: f121476536
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: blog-system
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: wordpress-pod
+  labels:
+    app.kubernetes.io/instance: wordpress
+    app.kubernetes.io/created-by: f121476536
+    app.kubernetes.io/component: web-server
+    app.kubernetes.io/part-of: blog-system
+spec:
+  containers:
+  - image: wordpress:5.8.2-apache
+    name: wordpress-container
+    ports:
+      - containerPort: 80
+    env:
+    - name: WORDPRESS_DB_HOST
+      value: mysql-service
+    - name: WORDPRESS_DB_USER
+      valueFrom:
+        secretKeyRef:
+          name: mysql-secret
+          key: env-mysql-user
+    - name: WORDPRESS_DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: mysql-secret
+          key: env-mysql-password
+    - name: WORDPRESS_DB_NAME
+      valueFrom:
+        secretKeyRef:
+          name: mysql-secret
+          key: env-mysql-database
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+  #限定有外網的Node
+  nodeSelector:
+    netconnection: external
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-service
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/instance: wordpress
+    app.kubernetes.io/created-by: f121476536
+    app.kubernetes.io/component: web-server
+    app.kubernetes.io/part-of: blog-system
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+#掛ConfigMap
+#kubectl create configmap nginx-comfigmap --from-file=nginx.conf
+#kubectl create configmap fluent-comfigmap --from-file=fluent.conf
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-fluentd-pod
+  labels:
+    app.kubernetes.io/instance: nginx-fluentd
+    app.kubernetes.io/created-by: f121476536
+    app.kubernetes.io/component: proxy-server
+    app.kubernetes.io/part-of: blog-system
+spec:
+  containers:
+  - image: nginx:1.21.4
+    name: nginx-container
+    ports:
+      - containerPort: 80
+    volumeMounts:
+    - name: nginx-comfigmap-volume
+      mountPath: /etc/nginx/nginx.conf
+      subPath: nginx.conf
+      readOnly: true
+    - name: shared-volume
+      mountPath: /var/log/nginx/
+  - image: fluentd:v1.14.0-1.0
+    name: fluentd-container
+    ports:
+      - containerPort: 24224
+    volumeMounts:
+    - name: fluent-comfigmap-volume
+      mountPath: /fluentd/etc/fluent.conf
+      subPath: fluent.conf
+      readOnly: true
+    - name: shared-volume
+      mountPath: /logs
+  volumes:
+    - name: nginx-comfigmap-volume
+      configMap:
+        name: nginx-comfigmap
+    - name: fluent-comfigmap-volume
+      configMap:
+        name: fluent-comfigmap
+    - name: shared-volume
+      emptyDir: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+  #限定有外網的Node
+  nodeSelector:
+    netconnection: external
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-fluentd-pod-service
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/instance: nginx-fluentd
+    app.kubernetes.io/created-by: f121476536
+    app.kubernetes.io/component: proxy-server
+    app.kubernetes.io/part-of: blog-system
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
