@@ -1,4 +1,17 @@
 apiVersion: v1
+kind: Service
+metadata:
+  name: db-svc
+spec:
+  clusterIP: None
+  ports:
+  - port: 3306
+    protocol: TCP
+    targetPort: mysql-port
+  selector:
+    app: "db-deployment"
+---
+apiVersion: v1
 kind: Secret
 metadata:
   name: mysql-secret
@@ -18,19 +31,19 @@ data:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: mysql
+  name: "db-state"
 spec:
-  serviceName: db-svc
+  serviceName: "db-svc"
   replicas: 1
   selector:
     matchLabels:
-      app: db-deployment
-      version: 5.7
+      app: "db-deployment"
+      version: "5.7"
   template:
     metadata:
       labels:
-        app: db-deployment
-        version: 5.7
+        app: "db-deployment"
+        version: "5.7"
     spec:
       containers:
       - name: mysql
@@ -60,6 +73,12 @@ spec:
             configMapKeyRef:
               name: mysql-cfm
               key: database
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/mysql
+          subPath: mysql
+        - name: conf
+          mountPath: /etc/mysql/conf.d
         livenessProbe:
           exec:
             command:
@@ -83,16 +102,3 @@ spec:
           timeoutSeconds: 3
           successThreshold: 1
           failureThreshold: 3
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: db-svc
-spec:
-  clusterIP: None
-  ports:
-  - port: 3306
-    protocol: TCP
-    targetPort: mysql-port
-  selector:
-    app: db-deployment
