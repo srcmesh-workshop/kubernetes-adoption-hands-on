@@ -74,11 +74,8 @@ spec:
               name: mysql-cfm
               key: database
         volumeMounts:
-        - name: data
+        - name: mysql-data
           mountPath: /var/lib/mysql
-          subPath: mysql
-        - name: conf
-          mountPath: /etc/mysql/conf.d
         livenessProbe:
           exec:
             command:
@@ -102,3 +99,18 @@ spec:
           timeoutSeconds: 3
           successThreshold: 1
           failureThreshold: 3
+      volumes:
+      - name: mysql-data
+        persistentVolumeClaim:
+          claimName: mysql-pv-claim
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pv-claim
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 20Gi
+---
