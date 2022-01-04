@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: demostatefulset
+spec:
+  serviceName: "hw-mysql-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: StatefulSet_mysql
+  template:
+    metadata:
+      labels:
+        app: StatefulSet_mysql
+        feeling: ThisWorldIsUnfirendly_mysql_StatefulSet
+    spec:
+      containers:
+      - image: mysql:8.0.27
+        name: mysqlstatefulset
+        env:
+        - name: MYSQL_DATABASE
+          value: "WP_DB"
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: secret-file-for-mysql
+              key: root_password
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: secret-file-for-mysql
+              key: wp_username
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: secret-file-for-mysql
+              key: wp_password
+        livenessProbe:
+          tcpSocket:
+            port: 3306
+          periodSeconds: 60
+          timeoutSeconds: 30
+          initialDelaySeconds: 300
+          failureThreshold: 5
+        readinessProbe:
+          tcpSocket:
+            port: 3306
+          periodSeconds: 60
+          timeoutSeconds: 15
+          initialDelaySeconds: 300
+          failureThreshold: 5             
+        volumeMounts:
+        - name: volume1
+          mountPath: "/etc/SecretDirFromVolumeMounts"
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      volumes:
+      - name: volume1
+        secret:
+          secretName: secret-file-for-mysql
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

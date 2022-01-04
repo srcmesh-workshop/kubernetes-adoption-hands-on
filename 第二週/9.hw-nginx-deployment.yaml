@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nginx
+        feeling: ThisWorldIsUnfirendly_nginx
+    spec:
+      containers:
+      - name: test
+        image: nginx
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: nginx-configmap
+          mountPath: /etc/nginx/conf.d
+      terminationGracePeriodSeconds: 10
+      volumes:
+      - name: nginx-configmap
+        configMap:
+          name: hw-nginx-configmap

@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress-deployment
+spec:
+  selector:
+    matchLabels:
+      app: wordpress
+  replicas: 2 
+  template:
+    metadata:
+      labels:
+        app: wordpress
+        feeling: ThisWorldIsUnfirendly_wordpress
+    spec:
+      containers:
+      - name: wordpress
+        image: wordpress:5.8.2-apache
+        ports:
+        - containerPort: 80
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: "hw-mysql-service:3306"
+        - name: WORDPRESS_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: secret-file-for-mysql
+              key: wp_username
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: secret-file-for-mysql
+              key: wp_password
+        - name: WORDPRESS_DB_NAME
+          value: "WP_DB"
+        volumeMounts:
+        - name: volume1
+          mountPath: "/etc/SecretDirFromVolumeMounts"
+      volumes:
+      - name: volume1
+        secret:
+          secretName: secret-file-for-mysql
