@@ -1,0 +1,27 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: fluentd-conf
+data:
+  fluent.conf: |
+                <source>
+                  type tail
+                  path /logs/nginx-access.log
+                  tag nginx.access
+                  format nginx
+                </source>
+
+                <source>
+                  @type tail
+                  format /^(?<time>\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}) \[(?<log_level>\w+)\] (?<pid>\d+).(?<tid>\d+): (?<message>.*)$/
+                  tag nginx.error
+                  path /logs/error.log
+                </source>
+
+                <match nginx.access>
+                  @type stdout
+                </match>
+
+                <match nginx.error>
+                  @type stdout
+                </match>

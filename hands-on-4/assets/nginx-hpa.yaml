@@ -1,0 +1,26 @@
+#####
+# k8s homework 1 by wyfan
+# 2021.12.27
+# HorizontalPodAutoscaler
+# nginx-deployment
+#####
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nginx-hpa
+spec: 
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 75
+# 好像是HorizontalPodAutoscaler apiVersion: autoscaling/v2beta2才有  
+# metrics: 
+#   - type: Resource
+#     resource:
+#      name: cpu
+#       target:
+#         type: Utilization 
+#         averageValue: 75

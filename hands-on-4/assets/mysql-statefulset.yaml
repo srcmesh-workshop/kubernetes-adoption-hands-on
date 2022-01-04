@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-statefulset
+spec:
+  serviceName: "mysql"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-pod
+  template:
+    metadata:
+      labels:
+        app: mysql-pod
+    spec:
+      containers:
+      - image: mysql:8.0.27
+        name: db
+        securityContext:
+          privileged: true
+        ports:
+        - containerPort: 3306
+        env:
+           - name: MYSQL_ROOT_PASSWORD
+             valueFrom:
+               secretKeyRef:
+                 name: mysql-secret
+                 key: mysql_root_password
+           - name: MYSQL_DATABASE
+             valueFrom:
+               secretKeyRef:
+                 name: mysql-secret
+                 key: mysql_db_name
+           - name: MYSQL_USER
+             valueFrom:
+               secretKeyRef:
+                 name: mysql-secret
+                 key: mysql_wordpress_user
+           - name: MYSQL_PASSWORD
+             valueFrom:
+               secretKeyRef:
+                 name: mysql-secret
+                 key: mysql_wordpress_password
+        volumeMounts:
+          - name: mysql-data
+            mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-data
+    spec:
+      storageClassName: mysql-pv
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+spec:
+  clusterIP: None
+  selector:
+    app: mysql-pod
+  ports:
+   - port: 3306
+     protocol: TCP
+     targetPort: 3306
