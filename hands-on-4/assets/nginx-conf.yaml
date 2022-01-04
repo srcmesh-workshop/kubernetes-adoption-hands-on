@@ -1,0 +1,30 @@
+# First, create a ConfigMap whose contents are used
+# as the nginx.conf file in the web server. 
+# This server uses /var/www/html as its
+# root document directory. When the server gets a 
+# request for *.php, it will forward that request
+# to our PHP-FPM container.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+# proxy_pass http://wordpress-svc; //要接到的Service Name
+  nginx.conf: |
+        server {
+            listen 80 default_server;
+            location / {
+                # $http_host is the host name that users seen on the browser URL
+                # and it equals to `HTTP_HOST` request header.
+                proxy_set_header Host $http_host;
+
+                proxy_pass http://wordpress-svc;
+
+                # Modify `Location` of 301 or 302 HTTP response, so
+                # that the browser will follow the correct location.
+                # proxy_redirect ~^http://[^/]*/(.*) http://$http_host/$1;
+            }
+            access_log /var/log/nginx/access.log main;
+            error_log /var/log/nginx/error.log warn;
+        }
+    
