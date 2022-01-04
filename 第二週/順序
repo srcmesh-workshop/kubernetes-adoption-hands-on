@@ -1,0 +1,14 @@
+apply順序為下
+hw-demoPersistentVolume
+hw-secret
+hw-statefulset-mysql
+hw-wordpress-deployment
+hw-service-worpress-to-mysql
+hw-service-nginx-to-wordpress
+hw-hpa-wordpress
+hw-t-nginx-configmap
+hw-nginx-deployment
+hw-hpa-nginx
+hw-fluentd-configmap
+hw-fluentd-daemonset
+hw-service-outer-to-nginx
