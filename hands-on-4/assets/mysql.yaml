@@ -1,0 +1,94 @@
+# mysql service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-svc
+spec:
+  selector:
+    app: mysql
+  ports:
+    - port: 3306
+      protocol: TCP
+      targetPort: 3306
+  clusterIP: None
+
+---
+# mysql secrets
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secret
+  # namespace: default
+data:
+  root_passwd: cGFzc3dvcmQ=
+  wp_user: ZEdWemRBbz0=
+  wp_user_passwd: cGFzc3dvcmQ=
+  db_name: test_1234
+type: Opaque
+
+---
+# mysql statefulset
+# using secrets from mysql-secret with env setting
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+spec:
+  selector:
+    matchLabels:
+      app: mysql
+  updateStrategy:
+    type: RollingUpdate
+  minReadySeconds: 5
+  serviceName: "mysql-svc"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0.27
+        ports:
+          - containerPort: 3306
+            name: mysql
+        # resources:
+        #   request:
+        #     memory: '64Mi'
+        #     cpu: '250m'
+        #   limits:
+        #     memory: '1024Mi'
+        #     cpu: '500m'
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: root_passwd
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: wp_user
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: wp_user_passwd
+        - name: MYSQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-secret
+              key: db_name
+        volumeMounts:
+        - name: mysql-volume
+          mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-volume
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

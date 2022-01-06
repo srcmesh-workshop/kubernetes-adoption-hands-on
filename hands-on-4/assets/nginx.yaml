@@ -1,0 +1,115 @@
+# nginx service
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-svc
+spec:
+  selector:
+    app: nginx
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  type: NodePort
+
+---
+# nginx configmap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  # namespace: default
+data:
+  nginx.conf: |
+        server {
+            listen 80 default_server;
+            location / {
+                # $http_host is the host name that users seen on the browser URL
+                # and it equals to `HTTP_HOST` request header.
+                proxy_set_header Host $http_host;
+                proxy_pass http://wordpress-svc;
+                # Modify `Location` of 301 or 302 HTTP response, so
+                # that the browser will follow the correct location.
+                # proxy_redirect ~^http://[^/]*/(.*) http://$http_host/$1;
+            }
+            access_log /var/log/nginx/access.log main;
+            error_log /var/log/nginx/error.log warn;
+        }
+
+---
+# HPA
+# 哪來這個東西的?
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nginx-hpa
+spec: 
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 75
+
+---
+# nginx deployment
+# mount config to configmap
+# mount log to hostpath control by fluentd
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: nginx-deploy
+  labels:
+    app: nginx
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      name: nginx-deploy
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx:1.21.4
+        imagePullPolicy: Always
+        name: nginx
+        ports:
+        - containerPort: 80
+        # resources:
+        #   request:
+        #     memory: '64Mi'
+        #     cpu: '250m'
+        #   limits:
+        #     memory: '1024Mi'
+        #     cpu: '500m'
+        # livenessProbe:
+        #   httpGet:
+        #     path: /
+        #     port: 80
+        #     scheme: HTTP
+        #   initialDelaySeconds: 60
+        #   periodSeconds: 600
+        volumeMounts:
+        - name: log-volume
+          mountPath: /var/log/nginx
+        - name: config-volume
+          mountPath: /etc/nginx/conf.d
+      volumes:
+      - name: log-volume
+        hostPath: 
+          path: "/run/desktop/mnt/host/C/Users/C/Users/jc098/Desktop/logs"
+      - name: config-volume
+        configMap:
+          name: nginx-config
+          items:
+          - key: nginx.conf
+            path: nginx.conf     

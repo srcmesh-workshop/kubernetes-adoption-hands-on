@@ -1,0 +1,94 @@
+# wordpress service
+apiVersion: v1
+kind: Service
+metadata:
+  name: wp-svc
+spec:
+  selector:
+    app: wordpress
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+  type: ClusterIP
+
+---
+# HPA
+# 還是不知道哪來的
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: wordpress-hpa
+spec: 
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: wordpress-deployment
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 75
+
+---
+# wp deployment with 3 replicas
+# using db info and config from mysql-secret/config
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress-deploy
+  labels:
+    app: wordpress
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      name: wordpress-deploy
+      labels:
+        app: wordpress
+    spec:
+      containers:
+      - image: wordpress:5.8.2-apache
+        ports:
+        - containerPort: 80
+        imagePullPolicy: Always
+        name: wordpress
+        # resources:
+        #   request:
+        #     memory: '64Mi'
+        #     cpu: '250m'
+        #   limits:
+        #     memory: '1024Mi'
+        #     cpu: '500m'
+        # # 檢測容器失敗時自動重啟
+        # livenessProbe:
+        #   httpGet:
+        #     path: /
+        #     port: 80
+        #     scheme: HTTP
+        #   initialDelaySeconds: 60
+        #   periodSeconds: 600
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: "mysql-service:3306"
+        - name: WORDPRESS_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: wp_user
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: wp_user_passwd
+        - name: WORDPRESS_DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-secret
+              key: db_name

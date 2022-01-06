@@ -1,0 +1,83 @@
+# fluentd configmap
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: fluentd-config
+data:
+  fluent.conf: |
+                <source>
+                  type tail
+                  path /logs/access.log
+                  tag nginx.access
+                  format nginx
+                </source>
+                <source>
+                  @type tail
+                  format /^(?<time>\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}) \[(?<log_level>\w+)\] (?<pid>\d+).(?<tid>\d+): (?<message>.*)$/
+                  tag nginx.error
+                  path /logs/error.log
+                </source>
+                <match nginx.access>
+                  @type stdout
+                </match>
+                <match nginx.error>
+                  @type stdout
+                </match> 
+
+---
+# fluentd daemonset
+# mount hostpath
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd-daemonSet
+  labels:
+    app: fluentd
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # DaemonSet只能為1，不支援maxSurge
+      maxUnavailable: 1
+  minReadySeconds: 5
+  selector:
+    matchLabels:
+      app: fluentd
+  template:
+    metadata:
+      labels:
+        app: fluentd
+    spec:
+      containers:
+      - name: fluentd
+        image: fluentd:v1.14.0-1.0
+        imagePullPolicy: Always
+        volumeMounts:
+          - name: log-volume
+            mountPath: /var/log
+          - name: fluentd-config-volume
+            mountPath: /fluentd/etc
+        # resources:
+        #   request:
+        #     memory: '64Mi'
+        #     cpu: '250m'
+        #   limits:
+        #     memory: '1024Mi'
+        #     cpu: '500m'
+        # livenessProbe:
+        #   httpGet:
+        #     path: /
+        #     port: 80
+        #     scheme: HTTP
+        #   initialDelaySeconds: 60
+        #   periodSeconds: 600
+      volumes:
+        - name: log-volume
+          hostPath: 
+            path: "/run/desktop/mnt/host/C/Users/C/Users/jc098/Desktop/logs"
+        - name: fluentd-config-volume
+          configMap: 
+            name: fluentd-config
+            items:
+              - key: fluent.conf
+                path: fluent.conf     
