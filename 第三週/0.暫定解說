@@ -1,1 +1,28 @@
 解說
+
+apply順序為下
+01.hw-demoPersistentVolume3
+02.hw-secret
+03-0.priority-mysql
+03-2.hw-statefulset-mysql
+04.hw-wordpress-deployment
+05.hw-service-worpress-to-mysql
+06.hw-service-nginx-to-wordpress
+07-1.hw-hpa-wordpress
+08.hw-t-nginx-configmap
+09-1.hw-nginx-deployment
+10-1.hw-hpa-nginx
+11.hw-fluentd-configmap
+12.hw-fluentd-daemonset
+13.hw-service-outer-to-nginx
+
+runtimeclass沒有apply
+如果apply會出現RuntimeHandler "XXX" not supported Kuberentes錯誤訊息
+
+
+以下兩項都是在保證mysql的運行
+Priority：保證其不被驅除
+Disruption Budget：保證其不會被刪掉(只有一台，最低一台)
+
+Affinity放在nginx的deployment，保證他跟fluentd同一台
+因此要等fluentd開起來nginx才會啟動
