@@ -1,0 +1,594 @@
+#期望架構: 我自己假設這個系統是類似台灣疫苗預約平台那樣，使用範圍為全台灣之一般民眾。該系統平時可供預約紀錄查詢，並在特定時間點會開放登入預約。
+#期待效果: 每個使用者都能透過網頁畫面進行登入 -> 選擇預約時間地點 -> 將預約紀錄儲存至資料庫。其中，該系統要能夠應付瞬間突波、系統升級時，服務承載最多只能掉50%。
+#基礎設施: master * 1 + worker node * 6 (其中work node劃分北、中、南區，每區各兩台)
+
+#事前準備
+#kubectl label node workernode1 topology.kubernetes.io/zone=northern-taiwan
+#kubectl label node workernode2 topology.kubernetes.io/zone=northern-taiwan
+#kubectl label node workernode3 topology.kubernetes.io/zone=central-taiwan
+#kubectl label node workernode3 topology.kubernetes.io/zone=central-taiwan
+#kubectl label node workernode3 topology.kubernetes.io/zone=southern-taiwan
+#kubectl label node workernode3 topology.kubernetes.io/zone=southern-taiwan
+
+#架構圖
+#請參考k8s預約系統架構圖.png所示
+
+#可能優缺點
+#1. 基礎設施具有擴充性，萬一假定目前六台機器真的不夠力，還可以作混合雲。
+#2. 各元件拆分明確，便於未來擴充/更新/汰換。然而，在管理或維護上，這些元件的設定仔細且分散，再加上k8s更新這麼快，集群營運人員可能會崩潰。如果是多個集群營運人員，內部協調和業務分工的部分應該也是很重的loading。
+#3. 目前每個服務的實際使用資源(cpu/memory)不確定、實際流量的大小也不太確定，會間接影響到deployment的resources.request/HPA的設定效益
+#4. 資源優先度(高、中、低)的劃分我個人覺得應該是要以照服務功能性來劃分(如預約系統可能就有登入、身分驗證等不同子功能等)會比較好，用元件來分可能過於粗略。
+
+---
+#搶佔式，直接搶佔別人的DB
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: high-priority
+value: 100
+globalDefault: false
+description: "This priority class should be used for high-priority service pods only."
+
+---
+#非搶佔式，在等待足夠資源後，才進行調度
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: middle-priority
+value: 50
+preemptionPolicy: Never
+globalDefault: false
+description: "This priority class should be used for middle-priority service pods only."
+
+---
+#非搶佔式，在等待足夠資源後，才進行調度
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: low-priority
+value: 20
+preemptionPolicy: Never
+globalDefault: false
+description: "This priority class should be used for low-priority service pods only."
+
+---
+#設定Pod overhead，開給app continaer以外的相關程式所需資源，如kata-agent, pause, guest-kernel等
+kind: RuntimeClass
+apiVersion: node.k8s.io/v1
+metadata:
+    name: kata-fc
+handler: kata-fc
+overhead:
+    podFixed:
+        memory: "120Mi"
+        cpu: "250m"
+
+---
+#1.1 先設定service type為ClusterIP，日後對外服務可直接設定ingress即可
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-deployment-service
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/instance: nginx
+    app.kubernetes.io/created-by: f121476536
+    app.kubernetes.io/component: proxy-server
+    app.kubernetes.io/part-of: reservation-system
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+#1.2
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app.kubernetes.io/instance: nginx
+    app.kubernetes.io/created-by: f121476536
+    app.kubernetes.io/component: proxy-server
+    app.kubernetes.io/part-of: reservation-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: nginx
+      app.kubernetes.io/created-by: f121476536
+      app.kubernetes.io/component: proxy-server
+      app.kubernetes.io/part-of: reservation-system
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: nginx
+        app.kubernetes.io/created-by: f121476536
+        app.kubernetes.io/component: proxy-server
+        app.kubernetes.io/part-of: reservation-system
+    spec:
+      #pod overhead設定
+      runtimeClassName: kata-fc
+      containers:
+      - image: nginx:1.21.4
+        name: nginx-container
+        #資源設定的部分，都是直接預設上限為兩倍
+        resources:
+          requests:
+            memory: "500Mi"
+            cpu: "250m"
+          limits:
+            memory: "1000Mi"
+            cpu: "500m"
+        ports:
+          - containerPort: 80
+        volumeMounts:
+        - name: nginx-comfigmap-volume
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+          readOnly: true
+        - name: shared-volume
+          mountPath: /var/log/nginx/
+      volumes:
+        - name: nginx-comfigmap-volume
+          configMap:
+            name: nginx-comfigmap
+        - name: shared-volume
+          #直接指定每一台Node上面的固定目錄位置，直接用NFS掛載同一個目錄說不定會比較方便?
+          hostPath:
+            path: /root/文件/
+            type: Directory
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      #設定priority，nginx/wordpress為優先度中級的服務
+      priorityClassName: middle-priority
+      affinity:
+        #設定反親和性，希望自身同樣的pod能盡量多分散在不同的zone當中(北、中、南區都要有)
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/instance
+                  operator: In
+                  values:
+                  - nginx
+              topologyKey: topology.kubernetes.io/zone
+        #設定親和性，必須與wordpress一起在同台主機上
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/instance
+                operator: In
+                values:
+                - wordpress
+            topologyKey: kubernetes.io/hostname
+---
+#1.3 掛nginx的ConfigMap
+#kubectl create configmap nginx-comfigmap --from-file=nginx.conf
+
+---
+#1.4 軟體升級/降級時，最多只能掉50%的服務承載力
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: nginx-pdb
+spec:
+  maxUnavailable: 50%
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: nginx
+      app.kubernetes.io/created-by: f121476536
+      app.kubernetes.io/component: proxy-server
+      app.kubernetes.io/part-of: reservation-system
+
+---
+#1.5 設定nginx的HPA，因應瞬間突波，因此設定低UT來觸發水平擴增，開得快，關得慢
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nginx-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment
+  #有點不曉得如果是全國性的這種流量，50 pod能不能擋得住，雖然這個好像還是需要作壓力測試才比較能知道確認承載量
+  minReplicas: 1
+  maxReplicas: 50
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        #設定低閾值為20%使用量
+        averageUtilization: 20
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 20
+  behavior:
+    scaleDown:
+      #為了要關得慢，設定CD時間為5min
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 15
+    #若從pod的最大值開始算起: 50 pod -> 觸發scaledown 50-(50*50%) = 25 pod -> 15sec(policy觸發後等待) -> 300sec(Window) -> 觸發scaledow 25-(25*50%) = 12pod -> 15sec(policy觸發後等待) -> 300sec(Window)...以此類推至最小值1
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+      - type: Pods
+        value: 10
+        periodSeconds: 15
+      selectPolicy: Max
+    #若從pod的最小值開始算起: 1 pod -> 觸發scaleup 1 + 10 = 11 pod -> 15sec(policy觸發後等待) -> 觸發scaleup 11 + (11*100%) = 22 pod -> 15sec(policy觸發後等待) -> 觸發scaleup 22 + (22*100%) = 44 pod...以此類推至最大值50
+
+---
+#2.1
+#掛fluentd的ConfigMap
+#kubectl create configmap fluentd-comfigmap --from-file=fluentd.conf
+
+---
+#2.2
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd-daemonset
+  labels:
+    app.kubernetes.io/instance: fluentd
+    app.kubernetes.io/created-by: f121476536
+    app.kubernetes.io/component: log-collector
+    app.kubernetes.io/part-of: reservation-system
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: fluentd
+      app.kubernetes.io/created-by: f121476536
+      app.kubernetes.io/component: log-collector
+      app.kubernetes.io/part-of: reservation-system
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: fluentd
+        app.kubernetes.io/created-by: f121476536
+        app.kubernetes.io/component: log-collector
+        app.kubernetes.io/part-of: reservation-system
+    spec:
+      runtimeClassName: kata-fc
+      containers:
+      - image: fluentd:v1.14.0-1.0
+        name: fluentd-container
+        resources:
+          requests:
+            memory: "500Mi"
+            cpu: "250m"
+          limits:
+            memory: "1000Mi"
+            cpu: "500m"
+        ports:
+          - containerPort: 24224
+        volumeMounts:
+        - name: fluent-comfigmap-volume
+          mountPath: /fluentd/etc/fluent.conf
+          subPath: fluent.conf
+          readOnly: true
+        - name: shared-volume
+          mountPath: /logs
+      volumes:
+        - name: fluent-comfigmap-volume
+          configMap:
+            name: fluent-comfigmap
+        - name: shared-volume
+          hostPath:
+            path: /root/文件/
+            type: Directory
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      #設定priority為低，log記錄雖然也很重要，不過若以服務優先度排序，是最先可以被捨棄的部分
+      priorityClassName: low-priority
+
+---
+#3.1
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-service
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/instance: wordpress
+    app.kubernetes.io/created-by: f121476536
+    app.kubernetes.io/component: web-server
+    app.kubernetes.io/part-of: reservation-system
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+#3.2
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress-deployment
+  labels:
+    app.kubernetes.io/instance: wordpress
+    app.kubernetes.io/created-by: f121476536
+    app.kubernetes.io/component: web-server
+    app.kubernetes.io/part-of: reservation-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: wordpress
+      app.kubernetes.io/created-by: f121476536
+      app.kubernetes.io/component: web-server
+      app.kubernetes.io/part-of: reservation-system
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: wordpress
+        app.kubernetes.io/created-by: f121476536
+        app.kubernetes.io/component: web-server
+        app.kubernetes.io/part-of: reservation-system
+    spec:
+      runtimeClassName: kata-fc
+      containers:
+      - image: wordpress:5.8.2-apache
+        name: wordpress-container
+        resources:
+          requests:
+            memory: "500Mi"
+            cpu: "250m"
+          limits:
+            memory: "1000Mi"
+            cpu: "500m"
+        ports:
+          - containerPort: 80
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: "mysql-service-headless:3306"
+        - name: WORDPRESS_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: env-mysql-user
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: env-mysql-password
+        - name: WORDPRESS_DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: env-mysql-database
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      #設定priority，nginx/wordpress為優先度中級的服務
+      priorityClassName: middle-priority
+      affinity:
+        #設定反親和性，希望自身同樣的pod能盡量多分散在不同的zone當中(北、中、南區都要有)
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/instance
+                  operator: In
+                  values:
+                  - wordpress
+              topologyKey: topology.kubernetes.io/zone
+        #設定親和性，必須與mysql一起在同台主機上
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/instance
+                operator: In
+                values:
+                - mysql
+            topologyKey: kubernetes.io/hostname
+
+---
+#3.3 
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wordpress-pdb
+spec:
+  maxUnavailable: 50%
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: wordpress
+      app.kubernetes.io/created-by: f121476536
+      app.kubernetes.io/component: web-server
+      app.kubernetes.io/part-of: reservation-system
+
+---
+#3.4
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: wordpress-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: wordpress-deployment
+  minReplicas: 1
+  maxReplicas: 50
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 20
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 20
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 15
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+      - type: Pods
+        value: 10
+        periodSeconds: 15
+      selectPolicy: Max
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secret
+type: Opaque
+data:
+  #echo -n 'f121476536' | base64 >> a
+  #一開始少了-n參數，結果base64編碼字串後會自動加一個換行符號，造成mysql container一直報錯起不來，卡超久
+  env-mysql-root-password: cm9vdC1wdw==
+  #root-pw
+  env-mysql-user: ZjEyMTQ3NjUzNg==
+  #f121476536
+  env-mysql-password: ZjEyMTQ3NjUzNi1wdw==
+  #f121476536-pw
+  env-mysql-database: d29yZHByZXNzLWRi
+  #wordpress-db
+
+---
+#4.1
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service-headless
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app.kubernetes.io/instance: mysql
+    app.kubernetes.io/created-by: f121476536
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: reservation-system
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+
+---
+#4.2
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-statefulset
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: mysql
+      app.kubernetes.io/created-by: f121476536
+      app.kubernetes.io/component: database
+      app.kubernetes.io/part-of: reservation-system
+  serviceName: "mysql-service-headless"
+  replicas: 1 # by default is 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: mysql
+        app.kubernetes.io/created-by: f121476536
+        app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: reservation-system
+    spec:
+      runtimeClassName: kata-fc
+      containers:
+      - image: mysql:8.0.27
+        name: mysql-container
+        resources:
+          requests:
+            memory: "500Mi"
+            cpu: "250m"
+          limits:
+            memory: "1000Mi"
+            cpu: "500m"
+        ports:
+          - containerPort: 3306
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: env-mysql-root-password
+          - name: MYSQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: env-mysql-user
+          - name: MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: env-mysql-password
+          - name: MYSQL_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: env-mysql-database
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      #設定priority，DB為優先度高級的服務
+      priorityClassName: high-priority
+      affinity:
+      #設定反親和性，希望自身同樣的pod能盡量多分散在不同的zone當中(北、中、南區都要有)
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/instance
+                  operator: In
+                  values:
+                  - mysql
+              topologyKey: topology.kubernetes.io/zone
+
+---
+#4.3
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: mysql-pdb
+spec:
+  #更新時，必須維持mysql cluster最低仲裁規模3
+  minAvailable: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: mysql
+      app.kubernetes.io/created-by: f121476536
+      app.kubernetes.io/component: database
+      app.kubernetes.io/part-of: reservation-system
+
+---
+#測試用，所以直接作port-forward
+#kubectl port-forward service/nginx-deployment-service 8003:80
