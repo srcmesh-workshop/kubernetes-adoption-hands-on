@@ -1,0 +1,31 @@
+#####
+# k8s homework 1 by wyfan
+# 2021.1.11
+# Disruption Budget
+# app: MySQL 8.0.27
+#####
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata: 
+  name: mysql-pdb
+spec:
+  minAvailable: 90%
+  selector:
+    matchLabels: 
+      app: mysql
+---
+#####
+# k8s homework 1 by wyfan
+# 2021.1.11
+# Disruption Budget
+# app: nginx latest
+#####
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata: 
+  name: nginx-pdb
+spec:  
+  maxUnavailable: 2
+  selector:
+    matchLabels: 
+      app: nginx
