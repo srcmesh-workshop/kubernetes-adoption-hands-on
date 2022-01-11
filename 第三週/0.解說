@@ -18,7 +18,7 @@ apply順序為下
 
 runtimeclass沒有apply
 如果apply會出現RuntimeHandler "XXX" not supported Kuberentes錯誤訊息
-
+我放棄
 
 以下兩項都是在保證mysql的運行
 Priority：保證其不被驅除
