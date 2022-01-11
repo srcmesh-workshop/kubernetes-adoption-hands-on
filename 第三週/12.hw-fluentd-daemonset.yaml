@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd-daemonset
+spec:
+  selector:
+    matchLabels:
+      app: fluentd-pod
+  template:
+    metadata:
+      labels:
+        app: fluentd-pod
+    spec:
+      containers:
+        - name: fluentd
+          image:  fluentd:v1.14.0-1.0
+          volumeMounts:
+            - name: fluentd-confnfigmap
+              mountPath: /fluentd/etc
+            - name: host-log-volume
+              mountPath: /logs
+      volumes:
+        - name: fluentd-confnfigmap
+          configMap:
+            name: hw-fluentd-configmap
+            items:
+              - key: fluent.conf
+                path: fluent.conf
+        - name: host-log-volume
+          hostPath:
+                  # the path on host machine
+            path: "/run/desktop/mnt/host/d/demopv/fluntd"

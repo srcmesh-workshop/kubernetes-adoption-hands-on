@@ -1,0 +1,7 @@
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: very-high-priority
+value: 1000000
+globalDefault: false
+description: "mysql不能走"
