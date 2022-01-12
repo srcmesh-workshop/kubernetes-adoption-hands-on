@@ -1,0 +1,110 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wp-cfm
+data:
+  host: db-svc
+  name: gemini_sql
+---
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-wp
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: wp-deployment
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 60
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 15
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 15
+      - type: Pods
+        value: 1
+        periodSeconds: 15
+      selectPolicy: Max
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wp-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wp-deployment
+      version: 5.8.2
+  template:
+    metadata:
+      labels:
+        app: wp-deployment
+        version: 5.8.2
+    spec:
+      initContainers:
+      - name: init-db
+        image: busybox
+        command: ['sh', '-c', "until nslookup db-svc.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for db-svc; sleep 2; done"]
+      containers:
+      - name: wp
+        image: wordpress:5.8.2-apache
+        ports:
+        - name: wp-port
+          containerPort: 80
+        resources:
+          limits:
+            cpu: 1000m
+          requests:
+            cpu: 500m
+        env:
+        - name: WORDPRESS_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: username
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: password
+        - name: WORDPRESS_DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: wp-cfm
+              key: host
+        - name: WORDPRESS_DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: wp-cfm
+              key: name
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wp-svc
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: wp-port
+  selector:
+    app: wp-deployment
