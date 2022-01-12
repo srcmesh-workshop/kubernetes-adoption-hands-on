@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd-daemonset
+spec:
+  selector:
+    matchLabels:
+      app: fluentd
+  template:
+    metadata:
+      labels:
+        app: fluentd
+    spec:
+      priorityClassName: priority-low
+      containers:
+      - name: fluentd
+        image: fluentd:v1.14-1  
+        volumeMounts: 
+          # 掛載fluentd 設定檔 
+          - name: fluentd-config-volume
+            mountPath: /fluentd/etc
+          # 與nginx共用log-volume
+          - name: log
+            mountPath: /logs 
+      volumes:
+        - name: fluentd-config-volume
+          configMap: 
+            name: fluentd-conf
+            items:
+              - key: fluent.conf
+                path: fluent.conf
+        - name: log
+          persistentVolumeClaim:
+            claimName: nginx-log-hostpath
+            

@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:    
+      priorityClassName: priority-low
+      # 親和力設定
+      affinity:
+        podAffinity:
+          # 儘可能貼近MySQL
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - mysql
+                  - wordpress
+              topologyKey: "kubernetes.io/hostname"
+        podAntiAffinity:
+          # 儘可能讓同樣服務分散在其他主機
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - nginx
+              topologyKey: "kubernetes.io/hostname"
+      initContainers:
+      - name: init-wordpress-service
+        image: busybox:1.28
+        command: ['sh', '-c', 'until nslookup wordpress-service; do echo waiting for wordpress-service; sleep 2; done']
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: "200m"
+            memory: "200Mi"
+          requests:
+            cpu: "150m"
+            memory: "100Mi"
+        volumeMounts:
+        - mountPath: /etc/nginx/conf.d # mount nginx-conf volumn to /etc/nginx
+          readOnly: true
+          name: nginx-conf
+        - mountPath: /var/log/nginx
+          name: log
+        # 確保WordPress正確啟動，再來啟動Nginx
+        livenessProbe:
+          tcpSocket:
+            host: wordpress-service
+            port: 80 
+          initialDelaySeconds: 30
+          periodSeconds: 600
+        # 優雅關閉 
+        lifecycle:
+          preStop:
+            exec: 
+              command: ["/usr/sbin/nginx", "-s", "quit"]
+      terminationGracePeriodSeconds: 60
+      volumes:
+      - name: nginx-conf
+        configMap:
+          name: nginx-conf # place ConfigMap `nginx-conf` on /etc/nginx
+          items:
+            - key: nginx.conf
+              path: nginx.conf 
+      - name: log
+        persistentVolumeClaim:
+          claimName: nginx-log-hostpath
+      
+              

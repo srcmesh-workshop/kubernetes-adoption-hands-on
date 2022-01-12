@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-statefulset
+spec:
+  selector:
+    matchLabels:
+      app: mysql
+  serviceName: "mysql-service"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec: 
+      priorityClassName: priority-high
+      # 親和力設定
+      affinity:
+        podAffinity:
+          # 儘可能貼近同一臺主機
+          preferredDuringSchedulingIgnoredDuringExecution: 
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - wordpress
+                  - nginx
+              topologyKey: "kubernetes.io/hostname"
+        podAntiAffinity:
+          # 儘可能讓同樣服務分散在其他主機   
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - mysql
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: mysql
+        image: mysql:8.0.27 
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-hostpath
+          mountPath: /var/lib/mysql 
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: MYSQL_ROOT_PASSWORD
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: MYSQL_DATABASE
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: MYSQL_USER
+        - name: MYSQL_PASSWORD
+          valueFrom: 
+            secretKeyRef:
+              name: mysql-secret
+              key: MYSQL_PASSWORD
+        # 優雅關機
+        lifecycle:
+          preStop:
+            exec:  
+              command: ["mysqladmin", "-u", "root", "-p$MYSQL_ROOT_PASSWORD", "shutdown"]  
+      terminationGracePeriodSeconds: 60
+  volumeClaimTemplates:   
+  - metadata:
+      name: mysql-hostpath 
+    spec:
+      storageClassName: mysql-hostpath
+      accessModes: 
+      - ReadWriteMany
+      resources:
+        requests:
+          storage: 1Gi 
