@@ -99,6 +99,7 @@ spec:
           timeoutSeconds: 3
           successThreshold: 1
           failureThreshold: 3
+      priorityClassName: high-priority
       volumes:
       - name: mysql-data
         persistentVolumeClaim:

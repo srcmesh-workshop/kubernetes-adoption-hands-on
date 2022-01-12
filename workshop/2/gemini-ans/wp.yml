@@ -63,6 +63,16 @@ spec:
       - name: init-db
         image: busybox
         command: ['sh', '-c', "until nslookup db-svc.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for db-svc; sleep 2; done"]
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - "db-deployment"
+            topologyKey: "kubernetes.io/hostname"
       containers:
       - name: wp
         image: wordpress:5.8.2-apache
