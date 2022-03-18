@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-1
+  labels:
+    version: "1"
+    app: nginx
+spec:
+  containers:
+    - name: nginx
+      image: nginx:latest
+      volumeMounts:
+        - name: demo
+          mountPath: /mnt
+    - name: busybox
+      image: busybox:latest
+      command:
+        - watch
+        - echo 'Version 1' > /tmp/index.html
+      volumeMounts:
+        - name: demo
+          mountPath: /mnt
+          subPath: bar
+  volumes:
+    - name: demo
+      hostPath:
+        path: /tmp/dummy
