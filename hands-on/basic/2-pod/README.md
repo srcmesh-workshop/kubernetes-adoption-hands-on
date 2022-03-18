@@ -13,7 +13,7 @@
 $ kubectl run <pod> --generator=run-pod/v1 --image=<image>
 
 # 範例
-$ kubectl run <pod> --generator=run-pod/v1 --image=<image>
+$ kubectl run nginx --generator=run-pod/v1 --image=nginx:latest
 ```
 
 ## 用 `get` 查看 pod 資訊
