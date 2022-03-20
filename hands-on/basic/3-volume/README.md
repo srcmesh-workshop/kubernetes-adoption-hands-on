@@ -83,7 +83,7 @@ spec:
 volumes:
 - name: demo
   hostPath:
-    path: /tmp/foo
+    path: /tmp/dummy
 ```
 
 3. 請為 nginx 利用 `mountPath` 將 volume 掛載至 `/mnt`
