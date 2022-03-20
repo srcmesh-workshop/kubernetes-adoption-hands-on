@@ -87,7 +87,7 @@ volumes:
 ```
 
 3. 請為 nginx 利用 `mountPath` 將 volume 掛載至 `/mnt`
-4. 請為 busybox 利用 `mountPath` 與 `subPaht` 只將 bar.txt 掛載至 `/mnt`
+4. 請為 busybox 利用 `mountPath` 與 `subPath` 只將 bar.txt 掛載至 `/mnt`
 
 你應該得到以下結果
 
