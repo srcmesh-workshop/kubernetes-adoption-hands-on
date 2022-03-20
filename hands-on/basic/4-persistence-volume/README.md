@@ -2,34 +2,32 @@
 
 ```yaml
 apiVersion: v1
+kind: Pod
+metadata:
+  name: mypod
+spec:
+  containers:
+    - name: myfrontend
+      image: nginx
+      volumeMounts:
+      - mountPath: "/var/www/html"
+        name: mypd
+  volumes:
+    - name: mypd
+      persistentVolumeClaim:
+        claimName: myclaim
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: block-pvc
+  name: myclaim
 spec:
   accessModes:
     - ReadWriteOnce
-  volumeMode: Block
+  volumeMode: Filesystem
   resources:
     requests:
-      storage: 10Gi
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: pod-with-block-volume
-spec:
-  containers:
-    - name: fc-container
-      image: fedora:26
-      command: ["/bin/sh", "-c"]
-      args: [ "tail -f /dev/null" ]
-      volumeDevices:
-        - name: data
-          devicePath: /dev/xvda
-  volumes:
-    - name: data
-      persistentVolumeClaim:
-        claimName: block-pvc
+      storage: 1Gi
 ```
 
 此處為程式範例由講師進行示範，實際 PV 操作會於 StatefulSet 時進行
