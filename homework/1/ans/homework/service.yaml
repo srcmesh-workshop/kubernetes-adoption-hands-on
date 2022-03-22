@@ -9,8 +9,8 @@ spec:
   - port: 8888
     targetPort: 80
   type: LoadBalancer # choose the right type base on your kubernetes environment
----
 
+=====
 apiVersion: v1
 kind: Service
 metadata:
@@ -22,8 +22,8 @@ spec:
   - port: 80
     targetPort: 80
   type: ClusterIP
----
-
+  
+=====
 apiVersion: v1
 kind: Service
 metadata:

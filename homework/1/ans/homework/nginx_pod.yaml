@@ -1,36 +1,34 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: nginx
+  name: Nginx-pod
   labels:
-    app: nginx
+    application: nginx
 spec:
   containers:
-    - name: nginx
+    - name: nginx	  
       image: nginx:latest
-      imagePullPolicy: IfNotPresent
       volumeMounts:
-        - mountPath: /var/log/nginx
-          name: share-logs
-        - mountPath: /etc/nginx/
+        - name: share-logs
+          mountPath: /var/log/nginx
+       - mountPath: /etc/nginx/
           name: nginx-conf
           readOnly: true
-    - name: fluentd
+    - name: fluentd	
       image: fluentd:latest
-      imagePullPolicy: IfNotPresent
       volumeMounts:
-        - mountPath: /logs
-          name: share-logs
-        - mountPath: /fluentd/etc
+        - name: share-logs
+          mountPath: /logs
+       - mountPath: /fluentd/etc
           name: fluent-conf
-          readOnly: true
+          readOnly: true    
   volumes:
     - name: share-logs
       emptyDir: {}
     - configMap:
-        items:
-          - key: nginx.conf # key name in configmap
-            path: nginx.conf # file name in container
+        #items:
+         # - key: nginx.conf # key name in configmap
+          #  path: nginx.conf # file name in container
         name: nginx-conf
       name: nginx-conf
     - configMap:
