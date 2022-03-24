@@ -1,5 +1,16 @@
-# kubectl create configmap fluentd-conf --from-file=conf/fluentd.conf --dry-run -o yaml
-
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-svc
+spec:
+  selector:
+    app: nginx
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30080
+  type: NodePort
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -28,50 +39,81 @@ data:
       @type stdout
     </match>
 ---
-
-# kubectl create configmap nginx-conf --from-file=conf/nginx.conf --dry-run -o yaml
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nginx-conf
+  name: nginx-svc-conf
 data:
   nginx.conf: |
     user  nginx;
     worker_processes  1;
-
     error_log  /var/log/nginx/error.log warn;
     pid        /var/run/nginx.pid;
-
     events {
         worker_connections  1024;
     }
-
     http {
         log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
                           '$status $body_bytes_sent "$http_referer" '
                           '"$http_user_agent" "$http_x_forwarded_for"';
-
         # Path to access.log & error.log
         access_log /var/log/nginx/access.log  main;
         error_log /var/log/nginx/error.log  warn;
-
         sendfile        on;
         keepalive_timeout  65;
         gzip  on;
-
         upstream backend {
             # must match the target service name
-            server wordpress-svc:80;
+            server wordpress:80;
         }
-
         server {
             listen       80;
             location / {
-                proxy_pass http://wordpress-svc;
-                
+                proxy_pass http://wordpress.default.svc.cluster.local;
                 proxy_set_header Host $http_host;
                 proxy_redirect ~^http://[^/]*/(.*) http://$http_host/$1;
             }
         }
     }
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  containers:
+    - name: nginx
+      image: nginx:latest
+      imagePullPolicy: IfNotPresent
+      volumeMounts:
+        - mountPath: /var/log/nginx
+          name: share-logs
+        - mountPath: /etc/nginx/
+          name: nginx-config
+          readOnly: true
+    - name: fluentd
+      image: fluentd:latest
+      imagePullPolicy: IfNotPresent
+      volumeMounts:
+        - mountPath: /logs
+          name: share-logs
+        - mountPath: /fluentd/etc
+          name: fluent-conf
+          readOnly: true
+  volumes:
+    - name: share-logs
+      emptyDir: {}
+    - configMap:
+        items:
+          - key: nginx.conf
+            path: nginx.conf
+        name: nginx-svc-conf
+      name: nginx-config
+    - configMap:
+        items:
+          - key: fluent.conf
+            path: fluent.conf
+        name: fluent.conf
+      name: fluent-conf
