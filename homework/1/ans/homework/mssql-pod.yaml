@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+spec:
+  containers:
+  - name: mysql
+    image: mysql:5.7
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        memory: "100Mi"
+        cpu: "50m"
+      limits:
+        memory: "500Mi"
+        cpu: "500m"
+    livenessProbe: 
+      exec:
+        command:
+        - cat
+        - entrypoint.sh
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      failureThreshold: 2 
+    readinessProbe:
+      tcpSocket:
+        port: 3306
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      failureThreshold: 2
+    env:
+    - name: MYSQL_DATABASE
+      valueFrom:
+        secretKeyRef:
+          key: db_name
+          name: mysql-secret
+    - name: MYSQL_ROOT_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          key: root_pwd
+          name: mysql-secret
+    - name: MYSQL_USER
+      valueFrom:
+        secretKeyRef:
+          key: user
+          name: mysql-secret
+    - name: MYSQL_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          key: user_pwd
+          name: mysql-secret    
+    ports:
+    - containerPort: 3306
+      name: mysql
+      protocol: TCP
