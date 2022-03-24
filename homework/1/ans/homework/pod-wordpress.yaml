@@ -3,32 +3,55 @@ kind: Pod
 metadata:
   name: wordpress
   labels:
-    version: "1"
-    app: wordpress
+    application: wordpress
 spec:
   containers:
     - name: wordpress
-      image: wordpress:latest
+      image: wordpress:5.9.2
       imagePullPolicy: IfNotPresent
       env:
         - name: WORDPRESS_DB_HOST
           valueFrom:
-            configMapKeyRef:
-              key: db_host
-              name: mysql-cfgmap
-        - name: WORDPRESS_DB_NAME
-          valueFrom:
-            configMapKeyRef:
-              key: db_name
-              name: mysql-cfgmap
+            secretKeyRef:
+              name: mysecret
+              key: DATABASE_HOST
         - name: WORDPRESS_DB_USER
           valueFrom:
             secretKeyRef:
-              key: user
-              name: mysql-secret
+              name: mysecret
+              key: DATABASE_USER
         - name: WORDPRESS_DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              key: user_passwd
-              name: mysql-secret
-
+              name: mysecret
+              key: DATABASE_PASSWORD
+        - name: WORDPRESS_DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: mysecret
+              key: DATABASE_NAME
+      resources:
+        requests:
+          memory: "125Mi"
+          cpu: "250m"
+        limits:
+          memory: "256Mi"
+          cpu: "250m"
+      livenessProbe:
+        initialDelaySeconds: 60
+        httpGet:
+          path: /
+          port: 80
+        periodSeconds: 10
+        timeoutSeconds: 10
+        successThreshold: 1
+        failureThreshold: 3
+      readinessProbe:
+        initialDelaySeconds: 30
+        httpGet:
+          path: /
+          port: 80
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 3
+        successThreshold: 1
