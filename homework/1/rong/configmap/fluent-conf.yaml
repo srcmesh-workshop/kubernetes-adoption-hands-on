@@ -1,0 +1,35 @@
+# Please edit the object below. Lines beginning with a '#' will be ignored,
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.
+#
+apiVersion: v1
+data:
+  fluent.conf: |
+    <source>
+      type tail
+      path /logs/**/access.log
+      tag nginx.access
+      format nginx
+    </source>
+
+    <source>
+      @type tail
+      format /^(?<time>\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}) \[(?<log_level>\w+)\] (?<pid>\d+).(?<tid>\d+): (?<message>.*)$/
+      tag nginx.error
+      path /logs/**/error.log
+    </source>
+
+    <match nginx.access>
+      @type stdout
+    </match>
+
+    <match nginx.error>
+      @type stdout
+    </match>
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2022-03-25T01:40:33Z"
+  name: fluent-conf
+  namespace: default
+  resourceVersion: "51267"
+  uid: 39042672-08c8-4c62-80f0-3cd9c47fe3ff

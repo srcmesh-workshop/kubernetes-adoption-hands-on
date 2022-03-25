@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: wordpress-pod-1
+  labels:
+    app: wordpress
+spec:
+  terminationGracePeriodSeconds: 1
+  containers:
+    - image: wordpress:latest
+      imagePullPolicy: Always
+      name: wordpress
+      ports:
+        - containerPort: 80
+          protocol: TCP
+      env:
+        - name: WORDPRESS_DB_HOST
+          value: mysql-svc:3306
+      envFrom:
+        - secretRef:
+            name: wordpress-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-svc
+spec:
+  selector:
+    app: wordpress
+  ports:
+    - port: 80
+  type: ClusterIP
