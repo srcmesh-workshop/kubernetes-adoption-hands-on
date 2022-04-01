@@ -5,7 +5,7 @@ metadata:
   name: my-config-1
 data:
   {{- $files := .Files }}
-  {{- range tuple "conf/nginx.conf" }}
+  {{- range tuple "example.conf" }}
   {{ . }}: |-
 {{ $files.Get . | indent 4 }}
   {{- end }}
