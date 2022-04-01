@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: my-config-1
+data:
+  {{- $files := .Files }}
+  {{- range tuple "conf/nginx.conf" }}
+  {{ . }}: |-
+{{ $files.Get . | indent 4 }}
+  {{- end }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: my-config-2
+data:
+{{ (.Files.Glob "conf/*").AsConfig | indent 2 }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: my-config-3
+data:
+  nginx.conf: {{ range .Files.Lines "conf/nginx.conf" }}
+    {{ . }}{{ end }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: my-config-4
+data:
+  # Present file content in YAML allows us to use Helm variable.
+  nginx.conf: |
+    server {
+      listen 80;
+      listen [::]:80;
+      
+      access_log /var/log/nginx/reverse-access.log;
+      error_log /var/log/nginx/reverse-error.log;
+      
+      location / {
+        proxy_pass https://{{ .Values.nginx.upstream }};
+      }
+    }

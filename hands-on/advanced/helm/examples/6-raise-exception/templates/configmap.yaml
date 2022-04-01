@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+data:
+  myvalue: "Hello World"
+  drink: {{ required "Name of drink is required" .Values.favorite.drink }}
+  {{- if eq .Values.favorite.drink "coffee" }}
+  {{- fail "Coffee is out of stock" }}
+  {{- else }}
+  mug: "0"
+  {{- end }}

@@ -1,0 +1,2 @@
+nginx:
+  upstream: example.com

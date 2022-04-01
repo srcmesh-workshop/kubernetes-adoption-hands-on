@@ -1,0 +1,10 @@
+# Default values for template-function.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nginx:
+  resource:
+    requests:
+      memory: 100Mi
+    limits:
+      cpu: 100m

@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: demo
+    chartver: {{ .Chart.Version }}
+    appver: {{ .Chart.AppVersion }}
+  name: {{ .Release.Name }}-demo
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: demo
+    spec:
+      containers:
+        - image: nginx
+          name: nginx
+          resources: {}

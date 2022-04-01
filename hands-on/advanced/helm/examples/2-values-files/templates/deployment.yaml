@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: demo
+  name: demo
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+    {{- with .Values.labels }}
+# Must not have any spaces in front of toYaml to preserve YAML structure.
+# Otherwise, it generates something like this:
+#    matchLabels:
+#            env: test
+#      version: 1.0.0
+{{ toYaml . | indent 6 }}
+    {{- end }}
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+      {{- range $key, $val := .Values.labels }}
+        {{ $key }}: {{ $val | quote }}
+      {{- end }}
+    spec:
+      containers:
+# If you have empty .Values.image.tag and template like
+#
+#     - image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+#
+# In the end, the YAML would be like
+#
+#     - image: nginx:
+#
+# Parser will then treat the second ":" as a field key instead of a value string of "image"
+# and failed the deployment.
+#
+# To avoid this, add quote
+#
+#     "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+#
+# It will become
+#
+#     - image: "nginx:"
+#
+# Or, always ensure .Values.image.tag is not empty
+        - image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          name: nginx
+          resources: {}
