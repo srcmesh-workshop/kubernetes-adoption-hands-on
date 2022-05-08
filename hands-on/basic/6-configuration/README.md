@@ -54,6 +54,14 @@ spec:
 
 你可以使用 `echo -n "value" | base64` 取得 `value` 的 base64 編碼
 你可以使用 `echo -n "dmFsdWU=" | base64 -D` 取得 `dmFsdWU=` 的 base64 解碼內容
+或者使用 CLI 建立對應 YAML 檔案
+
+```bash
+$ kubectl create secret generic <secret-name> \
+  --from-literal=<key1>=<value> \
+  --from-literal=<key2>=<value> \
+  --dry-run=client -o yaml
+```
 
 2. 請參考講義，實作以下內容至 Pod YAML 內
     * `DATABASE_HOST` 要以`環境變數`的方式傳入容器內
