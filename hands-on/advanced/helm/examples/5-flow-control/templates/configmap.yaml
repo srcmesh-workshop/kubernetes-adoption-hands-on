@@ -26,6 +26,8 @@ data:
   drink: {{ .drink | default "tea" | quote }}
   # .Values.favorite.food
   food: {{ .food | upper | quote }}
+  # Access values from parent scope instead of .Values.favorite
+  food2: {{ $.Values.favorite.food }}
   {{- end }}
   toppings: |-
     {{- range .Values.pizzaToppings }}
