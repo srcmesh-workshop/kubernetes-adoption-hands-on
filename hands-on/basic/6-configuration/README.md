@@ -52,9 +52,9 @@ spec:
    * `DATABASE_USER`: `user`
    * `DATABASE_PASSWORD`: `password`
 
-你可以使用 `echo -n "value" | base64` 取得 `value` 的 base64 編碼
-你可以使用 `echo -n "dmFsdWU=" | base64 -D` 取得 `dmFsdWU=` 的 base64 解碼內容
-或者使用 CLI 建立對應 YAML 檔案
+* 你可以使用 `echo -n "value" | base64` 取得 `value` 的 base64 編碼
+* 你可以使用 `echo -n "dmFsdWU=" | base64 -D` 取得 `dmFsdWU=` 的 base64 解碼內容
+* 或者使用 CLI 建立對應 YAML 檔案
 
 ```bash
 $ kubectl create secret generic <secret-name> \
