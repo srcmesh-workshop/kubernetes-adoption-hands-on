@@ -1,0 +1,13 @@
+首先我會有幾個file
+
+1. nginx file然後我會把fluentd and nginx先放在同一個pod裡面, 主要是考慮到可以快速收集log跟使用share volumn
+但如果比較好的方式應該是將他分開, 然後讓fluentd用DaemonSet確保每個node都有fluentd, 然後把nginx變成deployment
+
+然後下一步是靠著nginx con讓他幫忙導到wordpress的svc
+
+
+2. wordpress有兩部分, 一個是svc and deployment, 然後除了host我覺得沒有那麼保密性外是直接寫在env
+其他部分都是用secretKeyRef去secret config拿, 那host部分就是連接到mysql的svc.namespace
+
+3.第三部就是用一個deployment的mysql以及svc, 然後帳號密碼因為比較保密, 所以是掛一個secret table, 然後我想因為
+需要掛一個空間以防如果服務掛掉之類原本資料還在,所以就多加一個pvc給mysql mount上去

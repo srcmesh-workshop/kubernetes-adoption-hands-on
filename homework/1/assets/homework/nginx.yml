@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+  namespace: dunk
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
+  #loadBalancerIP: 35.209.131.236 should apply ip
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  namespace: dunk
+  labels:
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.21.6
+    resources:
+      requests:
+        memory: "300Mi"
+        cpu: "250m"
+      limits:
+        memory: "500Mi"
+        cpu: "500m"
+    imagePullPolicy: IfNotPresent
+    ports:
+    - containerPort: 80
+    volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/
+        - name: share-logs
+          mountPath: /var/log/nginx
+  - name: fluentd
+    image: fluentd:v1.14.0-1.0
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        memory: "300Mi"
+        cpu: "250m"
+      limits:
+        memory: "500Mi"
+        cpu: "500m"
+    ports:
+    volumeMounts:
+        - name: fluentd-config
+          mountPath: /fluentd/etc/
+        - name: share-logs
+          mountPath: /logs
+  restartPolicy: Always
+  volumes:
+   - name: nginx-config
+     configMap:
+       name: nginx-configmap
+       items:
+         - key: nginx.conf
+           path: nginx.conf
+   - name: fluentd-config
+     configMap:
+       name: fluentd-configmap
+       items:
+         - key: fluentd.conf
+           path: fluentd.conf
+   - name: share-logs
+     emptyDir: {}
