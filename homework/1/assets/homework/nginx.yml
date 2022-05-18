@@ -8,7 +8,7 @@ spec:
     app: nginx
   ports:
     - protocol: TCP
-      port: 80
+      port: 8010
       targetPort: 80
   type: LoadBalancer
   #loadBalancerIP: 35.209.131.236 should apply ip
@@ -32,8 +32,6 @@ spec:
         memory: "500Mi"
         cpu: "500m"
     imagePullPolicy: IfNotPresent
-    ports:
-    - containerPort: 80
     volumeMounts:
         - name: nginx-config
           mountPath: /etc/nginx/
