@@ -23,14 +23,14 @@ metadata:
 spec:
   containers:
   - name: nginx
-    image: nginx:1.21.6
+    image: nginx:latest
     resources:
       requests:
-        memory: "300Mi"
-        cpu: "250m"
+        memory: "50Mi"
+        cpu: "150m"
       limits:
-        memory: "500Mi"
-        cpu: "500m"
+        memory: "100Mi"
+        cpu: "200m"
     imagePullPolicy: IfNotPresent
     volumeMounts:
         - name: nginx-config
@@ -38,15 +38,15 @@ spec:
         - name: share-logs
           mountPath: /var/log/nginx
   - name: fluentd
-    image: fluentd:v1.14.0-1.0
+    image: fluentd:latest
     imagePullPolicy: IfNotPresent
     resources:
       requests:
-        memory: "300Mi"
-        cpu: "250m"
+        memory: "50Mi"
+        cpu: "150m"
       limits:
-        memory: "500Mi"
-        cpu: "500m"
+        memory: "100Mi"
+        cpu: "200m"
     ports:
     volumeMounts:
         - name: fluentd-config
