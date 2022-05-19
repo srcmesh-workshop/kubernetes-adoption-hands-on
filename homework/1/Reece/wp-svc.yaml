@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wp-svc
+spec:
+  selector:
+    app: wp
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP
