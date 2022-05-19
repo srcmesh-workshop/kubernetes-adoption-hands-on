@@ -27,4 +27,11 @@ spec:
             secretKeyRef:
               name: mysql-secret
               key: MYSQL_PASSWORD
+      resources:
+        requests:
+          cpu: 100m       
+          memory: 200Mi
+        limits:
+          cpu: 200m    
+          memory: 400Mi
   restartPolicy: Always

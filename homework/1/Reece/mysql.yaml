@@ -31,10 +31,10 @@ spec:
               key: MYSQL_DATABASE
       resources:
         requests:
-          cpu: 100m       
-          memory: 750Mi   # kubectl top pod 觀測到的值是 4XX M，希望讓平常使用率維持在 60%
+          cpu: 0.5
+          memory: 1Gi   # kubectl top pod 觀測到的值是 4XX M，希望讓平常使用率維持在 60%
         limits:
-          cpu: 200m       # be request value 2 times
+          cpu: 1       # be request value 2 times
           memory: 1.5Gi   # be request value 2 times
       livenessProbe:      
         tcpSocket:
@@ -45,4 +45,4 @@ spec:
         tcpSocket:
          port: 3306
         timeoutSeconds: 5
-  restartPolicy: OnFailure
+  restartPolicy: OnFailure    # DB 應只有在 error 時才重啟
