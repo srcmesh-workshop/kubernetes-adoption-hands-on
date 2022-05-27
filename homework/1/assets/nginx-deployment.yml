@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: wordpress
+  labels:
+      app: nginx-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-pod
+  template:
+      metadata:
+        labels:
+          app: nginx-pod
+      spec:
+        containers:
+        - name: nginx
+          image: nginx:latest
+          resources:
+            requests:
+              memory: "50Mi"
+              cpu: "150m"
+            limits:
+              memory: "100Mi"
+              cpu: "200m"
+          imagePullPolicy: Always
+          volumeMounts:
+              - name: nginx-config
+                mountPath: /etc/nginx
+              - name: share-logs
+                mountPath: /var/log/nginx
+        - name: fluentd
+          image: fluentd:latest
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "50Mi"
+              cpu: "150m"
+            limits:
+              memory: "100Mi"
+              cpu: "200m"
+          ports:
+          volumeMounts:
+              - name: fluentd-config
+                mountPath: /fluentd/etc
+              - name: share-logs
+                mountPath: /logs
+        restartPolicy: Always
+        volumes:
+        - name: nginx-config
+          configMap:
+            name: nginx-config
+            items:
+              - key: nginx.conf
+                path: nginx.conf
+        - name: fluentd-config
+          configMap:
+            name: fluentd-config
+            items:
+              - key: fluent.conf
+                path: fluent.conf
+        - name: share-logs
+          emptyDir: {}

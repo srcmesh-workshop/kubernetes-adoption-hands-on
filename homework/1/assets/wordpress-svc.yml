@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-service
+  namespace: wordpress
+spec:
+  selector:
+    app: wordpress-pod
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP 
