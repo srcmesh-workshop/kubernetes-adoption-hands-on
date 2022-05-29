@@ -21,5 +21,5 @@ Complete the following tasks under namespace `ckad-2`.
 3. The application container mounts the share volume at path `/usr/share/nginx/html` and the application container should be able to read the index.html fetched by init container.
 
 Container Image:
-1. Init Container: `busybox:latest`
+1. Init Container: `yauritux/busybox-curl:latest`
 2. Application Container: `nginx:latest`
