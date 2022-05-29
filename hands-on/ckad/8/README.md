@@ -8,7 +8,7 @@ $ kubectl config use-context gke
 
 ## Point
 
-5
+8
 
 ## Tasks
 
