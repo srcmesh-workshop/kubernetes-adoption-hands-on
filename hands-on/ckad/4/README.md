@@ -6,6 +6,11 @@ You have to switch to the right cluster before starting the tasks.
 $ kubectl config use-context gke
 ```
 
+
+## Point
+
+2
+
 ## Tasks
 
 Complete the following tasks under namespace `ckad-4`.
