@@ -168,7 +168,7 @@ spec:
 請修改上面 YAML 並滿足以下條件 (deploy.spec.template 為 pod template)
 
 * 加上你所在 namespace
-* 加上標籤 (Label) `environment=prod` 與 `version=1.0.0`
+* 加上 Pod 標籤 (Label) `environment=prod` 與 `version=1.0.0`
 * 容器的映像檔為 `nginx:latest`，且容器名稱為 `foobar`
 * 帶有環境變數 `DB_HOST=192.168.0.1` 與 `DB_NAME=foobar`
 * 宣告容器 `foobar` 監聽的 port 號為 `80`
