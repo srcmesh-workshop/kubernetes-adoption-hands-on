@@ -173,8 +173,8 @@ spec:
 * 帶有環境變數 `DB_HOST=192.168.0.1` 與 `DB_NAME=foobar`
 * 宣告容器 `foobar` 監聽的 port 號為 `80`
 * 資源使用限制
-    * `resource.requests`: CPU `10m` 與 Memory `50m`
-    * `resource.limits`: CPU `100m` 與 Memory `128m`
+    * `resource.requests`: CPU `10m` 與 Memory `50Mi`
+    * `resource.limits`: CPU `100m` 與 Memory `128Mi`
 * 增加探針
     * liveness
         * 使用 tcpSocket 方式監控 `port 80`
