@@ -10,6 +10,12 @@ $ kubectl [options] <verb> <resource> [flags]
 
 # Useful Commands
 
+* Show available resources
+
+```bash
+$ kubectl api-resources
+```
+
 * Get resource information
 ```bash
 # list all resource objects
