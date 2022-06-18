@@ -72,6 +72,35 @@ $ kubectl delete <resource> <name>
 $ kubectl delete pod <pod> --force --grace-period=0
 ```
 
+## 上標籤
+
+用 CLI 給 pod 上標籤
+
+```bash
+# 指令
+$ kubectl label <resource> <name> <key>=<value>
+```
+
+用 editor 給 pod 上標籤
+
+```bash
+$ kubectl edit <resource> <pod>
+```
+
+確認上標籤成功
+
+```bash
+$ kubectl get <resource> --show-labels
+```
+
+移除標籤
+
+* 最後有個 `-` 代表移除
+
+```bash
+$ kubectl label <resource> <name> <key>-
+```
+
 # 除錯技巧
 
 假設今天要跑一個除錯用的 pod 且離開後就刪除，可以加上 `--rm -it`
@@ -106,44 +135,48 @@ $ kubectl apply -f https://k8s.io/examples/admin/dns/dnsutils.yaml
 $ kubectl run --rm -it demo --image=curlimages/curl --restart=Never -- sh
 ```
 
+# 實作
 
+## 環境變數
 
-
-
-
-
-
-
-
-
-
-
-
-## 上標籤
-
-用 CLI 給 pod 上標籤
-
-```bash
-# 指令
-$ kubectl label <resource> <name> <key>=<value>
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: hands-on
+  name: hands-on
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hands-on
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: hands-on
+    spec:
+      containers:
+      - image: nginx:latest
+        name: nginx
+        resources: {}
 ```
 
-用 editor 給 pod 上標籤
+請修改上面 YAML 並滿足以下條件 (deploy.spec.template 為 pod template)
 
-```bash
-$ kubectl edit <resource> <pod>
-```
-
-確認上標籤成功
-
-```bash
-$ kubectl get <resource> --show-labels
-```
-
-移除標籤
-
-* 最後有個 `-` 代表移除
-
-```bash
-$ kubectl label <resource> <name> <key>-
-```
+* 加上你所在 namespace
+* 加上標籤 (Label) `environment=prod` 與 `version=1.0.0`
+* 容器的映像檔為 `nginx:latest`，且容器名稱為 `foobar`
+* 帶有環境變數 `DB_HOST=192.168.0.1` 與 `DB_NAME=foobar`
+* 宣告容器 `foobar` 監聽的 port 號為 `80`
+* 資源使用限制
+    * `resource.requests`: CPU `10m` 與 Memory `50m`
+    * `resource.limits`: CPU `100m` 與 Memory `128m`
+* 增加探針
+    * liveness
+        * 使用 tcpSocket 方式監控 `port 80`
+    * readiness
+        * 使用 httpGet 方式監控 `port 80` 並且帶有標頭 `kubelet-probe` 值為 `true`
