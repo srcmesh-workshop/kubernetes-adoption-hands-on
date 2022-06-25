@@ -1,0 +1,49 @@
+﻿apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+  labels:
+    app: nginx-pod
+spec:
+  containers:
+    - image: nginx:1.23.0
+      name: nginx
+      volumeMounts:
+        - mountPath: /etc/nginx/
+          name: nginx-config
+        - mountPath: /var/log/nginx/
+          name: log-volume
+    - image: fluentd:latest
+      name: fluentd
+      volumeMounts:
+        - mountPath: /fluentd/etc/
+          name: fluentd-config
+        - mountPath: /logs
+          name: log-volume
+  volumes:
+    - name: nginx-config
+      configMap:
+        name: nginx-config
+        items:
+          - key: nginx.conf
+            path: nginx.conf
+    - name: fluentd-config
+      configMap:
+        name: fluentd-config
+        items:
+          - key: fluent.conf
+            path: fluent.conf
+    - name: log-volume
+      emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-svc
+spec:
+  selector:
+    app: nginx-pod
+  ports:
+    - port: 8888
+      targetPort: 80
+  type: LoadBalancer
