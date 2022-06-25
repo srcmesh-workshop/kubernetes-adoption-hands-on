@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.23.0-alpine
+    ports:
+    - containerPort: 80
+      name: nginx-port
+    volumeMounts:
+      - mountPath: /var/log/nginx/
+        name: log
+      - name: nginx-config
+        mountPath: /etc/nginx/
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "250m"
+      limits:
+        memory: "256Mi"
+        cpu: "500m"
+    # livenessProbe:
+    #   initialDelaySeconds: 10
+    #   periodSeconds: 60
+    #   failureThreshold: 5
+    #   httpGet:
+    #     path: /
+    #     port: nginx-port
+    # readinessProbe:
+    #   initialDelaySeconds: 10
+    #   periodSeconds: 60
+    #   failureThreshold: 5
+    #   httpGet:
+    #     path: /
+    #     port: nginx-port
+
+  - name: fluentd
+    image: fluentd:v1.14.0-1.0
+    volumeMounts:
+      - mountPath: /logs/
+        name: log
+      - mountPath: /fluentd/etc/
+        name: fluent-config
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "250m"
+      limits:
+        memory: "256Mi"
+        cpu: "500m"
+
+  volumes:
+    - name: log
+      emptyDir: {}
+    - name: nginx-config
+      configMap:
+        name: configmap-nginx
+    - name: fluent-config
+      configMap:
+        name: configmap-fluent
