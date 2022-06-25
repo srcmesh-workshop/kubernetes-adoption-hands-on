@@ -1,0 +1,36 @@
+apiVersion: v1
+data:
+  MYSQL_DATABASE: d3BkYg==
+  MYSQL_PASSWORD: MTIzNDU2
+  MYSQL_ROOT_PASSWORD: MTIzNDU2
+  MYSQL_USER: d3B1c2Vy
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: dbconfig
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mysql
+  name: mysql
+  namespace: user-3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - image: mysql:8.0.29
+        name: mysql
+        ports:
+        - containerPort: 3306
+        envFrom:
+        - secretRef:
+            name: dbconfig

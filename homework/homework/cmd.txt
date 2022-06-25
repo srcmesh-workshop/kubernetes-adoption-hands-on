@@ -1,0 +1,22 @@
+ kubectl create secret generic dbconfig \
+    --from-literal=MYSQL_USER=wpuser \
+    --from-literal=MYSQL_PASSWORD=123456 \
+    --from-literal=MYSQL_DATABASE=wpdb \
+    --from-literal=MYSQL_ROOT_PASSWORD=123456 \
+    --dry-run=client \
+    -o yaml
+
+
+
+kubectl create configmap nginx-conf --from-file=nginx.conf \
+  --dry-run=client \
+  -o yaml
+
+kubectl create configmap nginx-conf --from-file=bar.conf=nginx.conf \
+  --dry-run=client \
+  -o yaml
+
+
+kubectl create configmap fluent-conf --from-file=fluent.conf \
+  --dry-run=client \
+  -o yaml

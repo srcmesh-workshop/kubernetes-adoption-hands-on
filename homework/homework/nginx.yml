@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-nginx-lb
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-nginx
+spec:
+  selector:
+    app: nginx
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+  namespace: user-3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx:1.23.0
+        name: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config-vol
+          mountPath: "/etc/nginx/"
+          readOnly: true
+        - name: log-vol
+          mountPath: /var/log/nginx/
+      - image: fluentd:v1.14.0-1.0
+        name: fluentd
+        volumeMounts:
+        - name: log-vol
+          mountPath: /logs
+        - name: fluentd-config-vol
+          mountPath: /fluentd/etc/
+      volumes:
+      - name: log-vol
+        emptyDir: {}
+      - name: nginx-config-vol
+        configMap:
+          name: nginx-conf
+          defaultMode: 0400
+      - name: fluentd-config-vol
+        configMap:
+          name: fluent-conf
+          defaultMode: 0644
