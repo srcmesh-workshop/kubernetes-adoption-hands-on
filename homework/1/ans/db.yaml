@@ -1,0 +1,70 @@
+apiVersion: v1
+data:
+  MYSQL_ROOT_PASSWORD: MTIzNHF3ZXI=
+  WP_USER_PASSWORD: MTIzNHF3ZXI=
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: db-secret
+---  
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: db-svc
+  name: db-svc
+spec:
+  ports:
+  - name: db-port
+    port: 3306
+    protocol: TCP
+    targetPort: 3306
+  selector:
+    app: mydb
+  type: ClusterIP
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: mydb
+  name: mydb
+  namespace: user-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mydb
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: mydb
+    spec:
+      containers:
+      - image: mysql:8.0.29
+        name: foobar
+        ports:
+          - containerPort: 3306
+            name: "my-port"
+        env:
+        - name: MYSQL_DATABASE
+          value: "wp-db"
+        - name: MYSQL_USER
+          value: "wp-user"
+        - name: MYSQL_PASSWORD
+          valueFrom: 
+            secretKeyRef: 
+              name: db-secret
+              key: WP_USER_PASSWORD
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom: 
+            secretKeyRef: 
+              name: db-secret
+              key: MYSQL_ROOT_PASSWORD
+

@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: wp-svc
+  name: wp-svc
+spec:
+  ports:
+  - name: wp-port
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: wp
+  type: ClusterIP
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: wp-deply
+  name: wp-deploy
+  namespace: user-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wp
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: wp
+    spec:
+      containers:
+      - image: wordpress:6.0.0-apache
+        name: wordpress
+        ports:
+          - containerPort: 80
+            name: "wp-port"
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: "db-svc"
+        - name: WORDPRESS_DB_USER
+          value: "wp-user"
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom: 
+            secretKeyRef: 
+              name: db-secret
+              key: WP_USER_PASSWORD
+        - name: WORDPRESS_DB_NAME
+          value: "wp-db"    
+        livenessProbe:
+          httpGet:
+            path: /wp-login.php
+            port: 80
+          initialDelaySeconds: 5
+          failureThreshold: 2
+          periodSeconds: 30
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /wp-login.php
+            port: 80
+          initialDelaySeconds: 5 
+          failureThreshold: 2
+          periodSeconds: 30 
+          timeoutSeconds: 3
+
