@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: nginx
+  template:
+    metadata:
+      labels:
+        name: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.23.0
+        resources:
+          requests:
+            memory: "150Mi"
+            cpu: "150m"
+          limits:
+            memory: "300Mi"
+            cpu: "300m"
+        ports:
+        - containerPort: 80
+        volumeMounts:
+          - name: nginx-config
+            mountPath: /etc/nginx/nginx.conf
+            subPath: nginx.conf
+          - name: log-config
+            mountPath: /var/log/nginx
+      - name: fluentd
+        image: fluentd:v1.14-1
+        resources:
+          requests:
+            memory: "150Mi"
+            cpu: "150m"
+          limits:
+            memory: "300Mi"
+            cpu: "300m"
+        volumeMounts:
+          - name: fluend-config
+            mountPath: /fluentd/etc/fluent.conf
+            subPath: fluend.conf
+          - name: log-config
+            mountPath: /logs
+      volumes:
+        - name: fluend-config
+          configMap:
+            name: fluend-config
+        - name: nginx-config
+          configMap:
+            name: nginx-config
+        - name: log-config
+          emptyDir: {}
