@@ -1,0 +1,114 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-conf
+  namespace: user-8
+  resourceVersion: "3811287"
+  uid: cfdbe563-02fb-4145-b41b-060b8504223b
+data:
+  nginx.conf: "user  nginx;\r\nworker_processes  1;\r\n\r\nerror_log  /var/log/nginx/error.log
+    warn;\r\npid        /var/run/nginx.pid;\r\n\r\nevents {\r\n    worker_connections
+    \ 1024;\r\n}\r\n\r\nhttp {\r\n    log_format  main  '$remote_addr - $remote_user
+    [$time_local] \"$request\" '\r\n                      '$status $body_bytes_sent
+    \"$http_referer\" '\r\n                      '\"$http_user_agent\" \"$http_x_forwarded_for\"';\r\n\r\n     
+    \   # Path to access.log & error.log\r\n    access_log /var/log/nginx/access.log
+    \ main;\r\n    error_log /var/log/nginx/error.log  warn;\r\n\r\n    sendfile        on;\r\n
+    \   keepalive_timeout  65;\r\n    gzip  on;\r\n\r\n    upstream backend {\r\n
+    \       # must match the target service name\r\n        server wordpress-svc:80;\r\n
+    \   }\r\n\r\n    server {\r\n        listen       80;\r\n        location / {\r\n
+    \           # $http_host is the host name that users seen on the browser URL\r\n
+    \           # and it equals to `HTTP_HOST` request header.\r\n            proxy_set_header
+    Host $http_host;\r\n\r\n            # You have to change this according to your
+    setup.\r\n            proxy_pass http://wordpress-svc;\r\n\r\n            # Modify
+    `Location` of 301 or 302 HTTP response, so\r\n            # that the browser will
+    follow the correct location.\r\n            proxy_redirect ~^http://[^/]*/(.*)
+    http://$http_host/$1;\r\n        }\r\n    }\r\n}"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluentd-conf
+  namespace: user-8
+  resourceVersion: "3804374"
+  uid: eed719b9-5318-4a5d-b569-79c43d065b3b
+data:
+  fluent.conf: "<source>\r\n  type tail\r\n  path /logs/**/access.log\r\n  tag nginx.access\r\n
+    \ format nginx\r\n</source>\r\n\r\n<source>\r\n  @type tail\r\n  format /^(?<time>\\d{4}/\\d{2}/\\d{2}     
+    \\d{2}:\\d{2}:\\d{2}) \\[(?<log_level>\\w+)\\] (?<pid>\\d+).(?<tid>\\d+): (?<message>.*)$/\r\n
+    \ tag nginx.error\r\n  path /logs/**/error.log\r\n</source>\r\n\r\n<match nginx.access>\r\n
+    \ @type stdout\r\n</match>\r\n\r\n<match nginx.error>\r\n  @type stdout\r\n</match>"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-svc
+spec:
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  selector:
+    app: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-dev
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.23.0
+        ports:
+        - containerPort: 80
+          name: nginx
+        volumeMounts:
+        - name: nginx-conf
+          mountPath: /etc/nginx/
+        - name: log-vol
+          mountPath: /var/log/nginx/
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        readinessProbe:
+          tcpSocket:
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 20
+      - name: fluentd
+        image: fluentd:v1.14-1
+        ports:
+        - containerPort: 80
+          name: fluentd
+        volumeMounts:
+        - name: fluentd-conf
+          mountPath: /fluentd/etc/
+        - name: log-vol
+          mountPath: /logs/
+      volumes:
+      - name: log-vol
+        emptyDir: {}
+      - name: nginx-conf
+        configMap:
+          name: nginx-conf
+          defaultMode: 0400
+      - name: fluentd-conf
+        configMap:
+          name: fluentd-conf
+          defaultMode: 0644
