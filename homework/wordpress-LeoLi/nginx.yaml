@@ -8,6 +8,10 @@ spec:
   containers:
     - image: nginx:1.23.0@sha256:dcdbe22fc3760b5f450b82cf9a86a7a17be03f00fbc3a20e3e2d6f558ec223b8
       name: nginx
+      ports:
+        - name: nginx
+          containerPort: 80
+          protocol: TCP
       volumeMounts:
         - mountPath: /etc/nginx/
           name: nginx-config
@@ -15,6 +19,10 @@ spec:
           name: log-volume
     - image: fluentd:v1.14-debian-1@sha256:31f856da4366b21eb65eb1606b626b9009649f52ca43126a2533622e2529c8d4
       name: fluentd
+      ports:
+        - name: fluentd
+          containerPort: 24224
+          protocol: TCP
       volumeMounts:
         - mountPath: /fluentd/etc/
           name: fluentd-config
