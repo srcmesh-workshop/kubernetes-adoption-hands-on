@@ -6,14 +6,14 @@ metadata:
     app: nginx-pod
 spec:
   containers:
-    - image: nginx:1.23.0
+    - image: nginx:1.23.0@sha256:dcdbe22fc3760b5f450b82cf9a86a7a17be03f00fbc3a20e3e2d6f558ec223b8
       name: nginx
       volumeMounts:
         - mountPath: /etc/nginx/
           name: nginx-config
         - mountPath: /var/log/nginx/
           name: log-volume
-    - image: fluentd:latest
+    - image: fluentd:v1.14-debian-1@sha256:31f856da4366b21eb65eb1606b626b9009649f52ca43126a2533622e2529c8d4
       name: fluentd
       volumeMounts:
         - mountPath: /fluentd/etc/
