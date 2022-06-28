@@ -1,0 +1,61 @@
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  selector:
+    app: nginx
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+          - containerPort: 80
+        volumeMounts:
+        - name: nginx-volume
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+        - name: log-volumn
+          mountPath: /var/log/nginx/
+      - name: log-parser 
+        image: fluentd:v1.14.0-1.0
+        volumeMounts:
+        - name: fluentd-volume
+          mountPath: /fluentd/etc/fluentd.conf
+          subPath: fluentd.conf
+        - name: log-volumn
+          mountPath: /logs
+      volumes:
+      - name: nginx-volume
+        configMap:
+          name: nginx-conf
+          defaultMode: 0400
+      - name: fluentd-volume
+        configMap:
+          name: fluentd-conf
+          defaultMode: 0644
+      - name: log-volumn
+        emptyDir: {}
