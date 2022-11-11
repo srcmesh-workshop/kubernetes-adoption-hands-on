@@ -179,4 +179,4 @@ spec:
     * liveness
         * 使用 tcpSocket 方式監控 `port 80`
     * readiness
-        * 使用 httpGet 方式監控 `port 80` 並且帶有標頭 `kubelet-probe` 值為 `true`
+        * 使用 httpGet 方式監控 `port 80` 並且帶有標頭 (`httpHeaders`) `kubelet-probe` 值為 `true`
