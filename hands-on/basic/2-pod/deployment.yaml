@@ -1,0 +1,58 @@
+apiVersion: V1
+kind: Deployment
+metadata:
+  creationTimestamp: "2022-11-11T16:06:48Z"
+  labels:
+    app: user-5-homework
+    environment: prod
+    version: 1.0.0
+  name: user-5-homework
+  namespace: user-5-homework-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      environment: prod
+      version: 1.0.0
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: "2022-11-11T16:06:48Z"
+      labels:
+        app: user-5-homework
+    spec:
+      containers:
+      - image: nginx:latest
+        imagePullPolicy: IfNotPresent
+        name: foobar
+        env:
+        - name: DB_HOST
+          value: "192.168.0.1"
+        - name : DB_NAME
+          value: foobar
+        ports:
+        - containerPort: 80
+        resources: 
+          requests:
+            memory: "50Mi"
+            cpu: "10m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"    
+        readinessProbe:
+          httpGet:
+            port: 80
+            httpHeaders:
+              - name: kubelet-probe
+                value: "true"
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          exec:
+            command:
+            - cat
+            - /tmp/healthy
+          tcpSocket:
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
