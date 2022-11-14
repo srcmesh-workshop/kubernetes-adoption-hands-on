@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: user-03-nginx
+  name: user-03-nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-03-nginx
+      environment: prod
+      version: 1.0.0
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: user-03-nginx
+        environment: prod
+        version: 1.0.0
+    spec:
+      containers:
+      - image: steven800216/user-03-steven800216:1.0.3
+        name: foobar
+        env: 
+        - name: DB_HOST
+          value: "192.168.0.1"
+        - name: DB_NAME
+          value: foobar
+        ports: 
+        - name: http
+          containerPort: 80
+          protocol: TCP 
+        resources: 
+          requests:
+            cpu: "10m"
+            memory: "50Mi"
+          limits:
+            cpu: "100m"
+            memory: "128Mi"
+        livenessProbe:
+          tcpSocket:
+            port: 80
+        readinessProbe:
+          httpGet:
+            path: "/"
+            port: 80
+            scheme: HTTP
+            httpHeaders:
+            - name: "kubelet-probe"
+              value: "true"
