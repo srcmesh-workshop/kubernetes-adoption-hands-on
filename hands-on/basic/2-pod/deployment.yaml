@@ -1,7 +1,7 @@
   apiVersion: v1
   kind: Namespace
   metadata:
-    name: user-1-homework-ns
+    name: user-6-homework-ns
   ---
   apiVersion: apps/v1
   kind: Deployment
