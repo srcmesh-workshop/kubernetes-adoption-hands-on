@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: user-9-homework-ns
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: user-9-homework-ns
+  name: use-9-deployment
+  labels:
+    environment: prod
+    version: "1.0.0"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      environment: prod
+      version: "1.0.3"
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        environment: prod
+        version: "1.0.3"
+    spec:
+      containers:
+      - image: nginx:latest
+        name: foobar
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        env:
+        - name: DB_HOST
+          value: "192.168.0.1"
+        - name : DB_NAME
+          value: foobar
+        resources: 
+          requests:
+            memory: "50Mi"
+            cpu: "10m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+        readinessProbe:
+          httpGet:
+            port: 80
+            httpHeaders:
+              - name: kubelet-probe
+                value: "true"
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 20
