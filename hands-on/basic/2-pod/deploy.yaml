@@ -39,10 +39,6 @@ spec:
         - name: DB_HOST
           value: "192.168.0.1"
         livenessProbe:
-          exec:
-            command:
-            - cat
-            - /tmp/healthy
           tcpSocket:
             port: 80
           initialDelaySeconds: 3
@@ -51,19 +47,12 @@ spec:
           successThreshold: 1
           failureThreshold: 3
         readinessProbe:
-          exec:
-            command:
-            - cat
-            - /tmp/healthy
-          tcpSocket:
-            port: 80
           httpGet:
-            path: /healthz
             port: 80
             scheme: HTTP
             httpHeaders:
             - name: kubelet-probe
-              value: true
+              value: "true"
           initialDelaySeconds: 3
           periodSeconds: 3
           timeoutSeconds: 1
