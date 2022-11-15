@@ -54,5 +54,5 @@ spec:
             - /tmp/healthy
           tcpSocket:
             port: 80
-          initialDelaySeconds: 5
+          initialDelaySeconds: 
           periodSeconds: 5
