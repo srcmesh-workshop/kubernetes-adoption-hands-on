@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: pod-1
+  name: pod-user-25
   labels:
     version: "1"
     app: nginx
@@ -21,6 +21,6 @@ spec:
       volumeMounts:
       - name: htmldir
         mountPath: /tmp
-  volumns:
+  volumes:
     - name: htmldir
       emptyDir: {}
