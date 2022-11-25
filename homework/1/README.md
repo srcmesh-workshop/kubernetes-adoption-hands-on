@@ -67,7 +67,7 @@ http {
 
 ### fluentd:
   * 設定檔放置位置: `/fluentd/etc/fluent.conf`
-  * fluend.conf
+  * fluent.conf
 ```
 <source>
   type tail
