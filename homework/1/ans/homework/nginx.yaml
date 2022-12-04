@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx:1.23.2
+        name: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /var/log/nginx
+          name: share-logs
+        - mountPath: /etc/nginx/
+          name: nginx-configmap
+          readOnly: true
+      - image: fluentd:v1.14.0-1.0
+        name: fluentd
+        volumeMounts:
+        - mountPath: /var/log/nginx
+          name: share-logs
+        - name: fluentd-configmap
+          mountPath: /fluentd/etc/fluent.conf
+          readOnly: true
+      volumes:
+      - configMap:
+          items:
+            - key: nginx.configmap
+              path: nginx.configmap
+          name: nginx-configmap
+        name: nginx-configmap
+      - configMap:
+          items:
+            - key: fluent.configmap
+              path: fluent.configmap
+          name: fluent-configmap
+        name: fluent-configmap
+      - name: share-logs
+        emptyDir: {}
