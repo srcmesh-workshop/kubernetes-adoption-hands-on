@@ -12,7 +12,7 @@
 
 1. 利用 Deployment 部署 nginx
 * 可以嘗試用 Configmap 來管理 nginx 設定檔
-* 利用 type 為 hostPath 的 volume 來當作 log-volume 寫入 log
+* 利用 type 為 emptyDir 的 volume 來當作 log-volume 寫入 log
 * replicas: 1
 
 2. 利用 Deployment 部署 wordpress
