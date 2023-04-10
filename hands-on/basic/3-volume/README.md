@@ -3,25 +3,34 @@
 ![](assets/pod.png)
 
 ```yaml
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: pod-1
   labels:
-    version: "1"
-    app: nginx
+    app: hands-on
+  name: hands-on
 spec:
-  containers:
-    - name: nginx
-      image: nginx:latest
-    - name: busybox
-      image: busybox:latest
-      # busybox 本身啟動後自行持續運作的 process，
-      # 但 container 內需要有個 process 持續執行才能存活
-      # 因此這邊用 watch 方式，讓他持續執行 echo 指令
-      command:
-        - watch
-        - echo 'Version 1' > /tmp/index.html
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hands-on
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: hands-on
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+      - name: busybox
+        image: busybox:latest
+        # busybox 本身啟動後自行持續運作的 process，
+        # 但 container 內需要有個 process 持續執行才能存活
+        # 因此這邊用 watch 方式，讓他持續執行 echo 指令
+        command:
+          - watch
+          - echo 'Version 1' > /tmp/index.html
 ```
 
 # Hands-on
