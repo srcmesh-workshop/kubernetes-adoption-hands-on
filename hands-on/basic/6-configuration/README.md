@@ -54,7 +54,7 @@ spec:
 
 * 你可以使用 `echo -n "value" | base64` 取得 `value` 的 base64 編碼
 * 你可以使用 `echo -n "dmFsdWU=" | base64 -D` 取得 `dmFsdWU=` 的 base64 解碼內容
-    * MacOS: `base64 -D`、Linux: `base64-d`   
+    * MacOS: `base64 -D`、Linux: `base64 -d`   
 * 或者使用 CLI 建立對應 YAML 檔案
 
 ```bash
