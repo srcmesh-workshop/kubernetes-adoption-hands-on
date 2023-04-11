@@ -46,9 +46,8 @@ metadata:
 spec:
   selector:
     app: nginx
-    version: "1"
   ports:
-    - port: 12345
+    - port: 80
       targetPort: 80
   type: ClusterIP
 ```
