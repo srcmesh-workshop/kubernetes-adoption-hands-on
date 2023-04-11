@@ -18,7 +18,7 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
-   name: svc-pod-3
+   name: svc-pod-2
    labels:
       version: "3.1.1"
       application: nginx
