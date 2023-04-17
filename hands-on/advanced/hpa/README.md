@@ -56,25 +56,25 @@ metadata:
 name: sample-app-hpa
 namespace: default
 spec:
-scaleTargetRef:
-  apiVersion: apps/v1
-  kind: Deployment
-  name: sample-app
-minReplicas: 1
-maxReplicas: 10
-metrics:
-- type: Resource
-  resource:
-    name: cpu
-    target:
-      type: Utilization
-      averageUtilization: 80
-- type: Resource
-  resource:
-    name: memory
-    target:
-      type: AverageValue
-      averageValue: 500Mi
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: sample-app
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: AverageValue
+        averageValue: 500Mi 
 ```
 
 5. 使用指令部署 HPA 資源。
