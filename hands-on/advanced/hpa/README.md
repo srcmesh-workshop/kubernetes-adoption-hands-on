@@ -93,7 +93,7 @@ $ kubectl get hpa
 1. 首先，暴露您的 `hands-on` 服務，以便能夠從集群內部訪問它。如果您尚未創建服務，可以使用以下命令創建一個 ClusterIP 類型的服務：
 
 ```
-$ kubectl expose deployment hands-on --type=ClusterIP --name=hands-on-service
+$ kubectl expose deployment hands-on --type=ClusterIP --name=hands-on-service --port=80 --target-port=80
 ```
 
 2. 接下來，使用 `kubectl run` 命令創建一個名為 `load-generator` 的繁忙 Pod，使其向 `hands-on-service` 服務發送大量請求。這裡我們使用 `busybox` 鏡像並運行 `wget` 命令進行持續持續的 HTTP 請求：
