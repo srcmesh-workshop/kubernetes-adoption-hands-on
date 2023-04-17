@@ -53,8 +53,7 @@ $ kubectl apply -f hands-on-deployment.yaml
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
-name: sample-app-hpa
-namespace: default
+  name: sample-app-hpa
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
