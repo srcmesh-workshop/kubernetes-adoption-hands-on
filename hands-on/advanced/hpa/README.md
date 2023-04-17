@@ -43,11 +43,39 @@ spec:
 $ kubectl apply -f hands-on-deployment.yaml
 ```
 
-4. 編寫一個名為 `hands-on-hpa.yaml` 的配置文件，以創建一個 `v2beta2` 版本的 Horizontal Pod Autoscaler (HPA) 資源，讓它根據以下條件自動縮放 `hands-on` Deployment 的副本數量：
+4. 編寫一個名為 `hands-on-hpa.yaml` 的配置文件，修改下面 `v2beta2` 版本的 Horizontal Pod Autoscaler (HPA) 資源範例，讓它根據以下條件自動縮放 `hands-on` Deployment 的副本數量：
     - 最小副本數量: 1
     - 最大副本數量: 3
     - CPU 使用率目標: 30%
     - Memory 使用率目標: 50%
+
+```
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+name: sample-app-hpa
+namespace: default
+spec:
+scaleTargetRef:
+  apiVersion: apps/v1
+  kind: Deployment
+  name: sample-app
+minReplicas: 1
+maxReplicas: 10
+metrics:
+- type: Resource
+  resource:
+    name: cpu
+    target:
+      type: Utilization
+      averageUtilization: 80
+- type: Resource
+  resource:
+    name: memory
+    target:
+      type: AverageValue
+      averageValue: 500Mi
+```
 
 5. 使用指令部署 HPA 資源。
 
