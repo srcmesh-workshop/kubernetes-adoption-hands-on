@@ -44,7 +44,7 @@ $ kubectl get pod -o wide
 
 ## 使用 Deployment 模擬 DaemonSet 的效果
 
-1. 使用 `kubectl describe node` 查看要用作 `topologyKey` 的標籤，並利用 `Pod Anti-finity` 確保每個 worker 節點都有一個 Pod。
+1. 使用 `kubectl describe node` 查看要用作 `topologyKey` 的標籤，並利用 `Pod Anti-affinity` 確保每個 worker 節點都有一個 Pod。
 
 * 可以使用 kubernetes.io/hostname
 
