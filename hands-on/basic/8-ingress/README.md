@@ -9,7 +9,7 @@ metadata:
     # Annotations here is for demostration only
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
-  ingressClassName: nginx-example
+  ingressClassName: nginx
   rules:
   - http:
       paths:
