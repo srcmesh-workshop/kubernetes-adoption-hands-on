@@ -36,7 +36,7 @@ spec:
    * Service 2
      * Name: `svc-to-1`
      * 將流量只送往 `svc-pod-1`
-     * 客戶存取此 service 時要能夠用 `12345` 存取
+     * 客戶存取此 service 時要能夠用 port `12345` 存取
      
 ```yaml
 apiVersion: v1
