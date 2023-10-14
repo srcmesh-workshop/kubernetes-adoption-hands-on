@@ -46,7 +46,7 @@ $ kubectl get pod -o wide
 
 1. 使用 `kubectl describe node` 查看要用作 `topologyKey` 的標籤，並利用 `Pod Anti-affinity` 確保每個 worker 節點都有一個 Pod。
 
-* `topologyKey` 可以使用 kubernetes.io/hostname
+* `topologyKey` 可以使用 `kubernetes.io/hostname`
 
 2. 參考以下範例 YAML 文件創建 2 個 Deployment，分別練習:
 
